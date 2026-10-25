@@ -1,7 +1,7 @@
 /** Composants d'interface réutilisables — design system PrevEnSanté. */
 
 import type { ReactNode } from 'react';
-import { LIBELLE_CATEGORIE, LIBELLE_STATUT } from '../lib/format';
+import { LIBELLE_CATEGORIE, LIBELLE_STATUT, VARIANTE_STATUT } from '../lib/format';
 
 /* ── CARTES ──────────────────────────────────────────── */
 
@@ -339,7 +339,7 @@ export function ActionCard({
       <div className="top">
         <span className="t">{titre}</span>
         <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <Chip variante={statut}>{statutLibelle ?? LIBELLE_STATUT[statut]}</Chip>
+          <Chip variante={VARIANTE_STATUT[statut] ?? 'todo'}>{statutLibelle ?? LIBELLE_STATUT[statut] ?? statut}</Chip>
           {enRetard && <Chip variante="late">En retard</Chip>}
         </span>
       </div>

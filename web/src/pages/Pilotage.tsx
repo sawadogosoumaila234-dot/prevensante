@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Alert, Barres, Card, Chip, Filtres, Histogramme, Stat } from '../components/ui';
 import { CATEGORIES, MOIS } from '../data/demo';
+import { VARIANTE_STATUT } from '../lib/format';
 
 type Periode = '30j' | '90j' | 'annee' | 'tous';
 
@@ -182,7 +183,7 @@ export default function Pilotage() {
                     <td>{d.occurrences}</td>
                     <td>{d.action}</td>
                     <td>
-                      <Chip variante={d.statut}>{d.libelle}</Chip>
+                      <Chip variante={VARIANTE_STATUT[d.statut] ?? 'todo'}>{d.libelle}</Chip>
                     </td>
                   </tr>
                 ))}

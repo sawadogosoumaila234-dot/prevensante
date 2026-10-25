@@ -13,7 +13,7 @@ import {
   type FiltreOption,
 } from '../components/ui';
 import { useFiltreSignalements, useSignalements } from '../hooks/useDonnees';
-import { formatDate, LIBELLE_STATUT } from '../lib/format';
+import { formatDate, LIBELLE_STATUT, VARIANTE_STATUT } from '../lib/format';
 
 type Critere = 'all' | 'danger' | 'incident' | 'accident' | 'prio' | 'open' | 'closed';
 
@@ -77,7 +77,7 @@ export default function Signalements() {
               description={s.description}
               tags={
                 <>
-                  <Chip variante={s.statut}>{LIBELLE_STATUT[s.statut]}</Chip>
+                  <Chip variante={VARIANTE_STATUT[s.statut] ?? 'todo'}>{LIBELLE_STATUT[s.statut] ?? s.statut}</Chip>
                   {s.en_retard && <Chip variante="late">En retard</Chip>}
                   {(s.priorite === 'critique' || s.priorite === 'elevee') && (
                     <Chip variante="prio">Prioritaire</Chip>

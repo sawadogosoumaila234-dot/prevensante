@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { ActionCard, Alert, Card, Chip, Empty, Filtres, Stat } from '../components/ui';
 import { useActions, useFiltreActions } from '../hooks/useDonnees';
+import { VARIANTE_STATUT } from '../lib/format';
 
 type Critere = 'all' | 'a_faire' | 'en_cours' | 'a_verifier' | 'cloturee' | 'late';
 
@@ -76,10 +77,10 @@ export default function Actions() {
 
       <Card titre="Cycle de vie d'une action" sousTitre="Les quatre statuts disponibles et la règle de clôture">
         <div className="grid grid-4" style={{ marginBottom: 14 }}>
-          <Chip variante="a_faire">À faire</Chip>
-          <Chip variante="en_cours">En cours</Chip>
-          <Chip variante="a_verifier">À vérifier</Chip>
-          <Chip variante="cloturee">Clôturée</Chip>
+          <Chip variante={VARIANTE_STATUT['a_faire']}>À faire</Chip>
+          <Chip variante={VARIANTE_STATUT['en_cours']}>En cours</Chip>
+          <Chip variante={VARIANTE_STATUT['a_verifier']}>À vérifier</Chip>
+          <Chip variante={VARIANTE_STATUT['cloturee']}>Clôturée</Chip>
         </div>
         <Alert variante="warn" emoji="⚠️" titre="Clôture soumise à vérification">
           Une action ne peut être clôturée que par une personne compétente du site. Les actions en retard

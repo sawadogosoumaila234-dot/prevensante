@@ -14,7 +14,7 @@ import {
 } from '../components/ui';
 import { CATEGORIES, MOIS, SITES } from '../data/demo';
 import { useActions, useFiltreActions, useSignalements } from '../hooks/useDonnees';
-import { formatDate, LIBELLE_STATUT } from '../lib/format';
+import { formatDate, LIBELLE_STATUT, VARIANTE_STATUT } from '../lib/format';
 
 type RoleVue = 'travailleur' | 'responsable_hse' | 'directeur_site' | 'admin';
 
@@ -98,7 +98,7 @@ export default function TableauDeBord() {
                 description={s.description}
                 tags={
                   <>
-                    <Chip variante={s.statut}>{LIBELLE_STATUT[s.statut]}</Chip>
+                    <Chip variante={VARIANTE_STATUT[s.statut] ?? 'todo'}>{LIBELLE_STATUT[s.statut] ?? s.statut}</Chip>
                     {(s.priorite === 'critique' || s.priorite === 'elevee') && (
                       <Chip variante="prio">Prioritaire</Chip>
                     )}
