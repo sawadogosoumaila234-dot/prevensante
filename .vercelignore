@@ -1,0 +1,24 @@
+# Fichiers volontairement EXCLUS du deploiement Vercel.
+#
+# Raison de securite : sans cette exclusion, un deploiement statique servirait
+# la racine du depot (framework: null, outputDirectory: null) et publierait le
+# PRD sur une URL accessible publiquement.
+#
+# Les regles de reecriture (vercel.json) s'appliquent APRES la verification du
+# systeme de fichiers : un rewrite ne suffit donc pas a proteger un fichier
+# existant. La seule protection fiable est de ne pas l'envoyer du tout.
+
+# Documents internes et propriete intellectuelle
+docs/
+README.md
+CONTEXTE.md
+
+# Tests et outillage local
+test/
+
+# Configuration locale et meta-fichiers de depot
+.env
+.env.*
+.vercel/
+.gitignore
+.gitattributes

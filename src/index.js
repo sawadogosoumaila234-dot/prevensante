@@ -1,11 +1,13 @@
 /**
- * PrevEnSanté — point d'entrée de l'application.
+ * Adaptateur Node HTTP -> API Web standard, et serveur de développement local.
  *
- * Node simple, aucune dépendance applicative : le socle technique n'impose
- * aucun framework (voir README du projet d'environnement).
+ * Le routeur (`src/app.js`) ne connaît que `Request`/`Response`. Ce fichier fait
+ * la traduction pour un serveur `node:http` classique, afin de développer et
+ * tester en local exactement le code déployé sur Vercel (`api/index.js`).
  */
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
+import { handleRequest } from './app.js';
 
 const DEFAULT_PORT = 3000;
 
@@ -18,28 +20,42 @@ function loadLocalEnv() {
   }
 }
 
+/** Convertit une requête `node:http` en `Request` standard. */
+async function toWebRequest(req) {
+  const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
+  const method = req.method ?? 'GET';
+  const init = { method, headers: req.headers };
+
+  if (method !== 'GET' && method !== 'HEAD') {
+    init.body = await new Promise((resolve, reject) => {
+      const chunks = [];
+      req.on('data', (chunk) => chunks.push(chunk));
+      req.on('end', () => resolve(Buffer.concat(chunks)));
+      req.on('error', reject);
+    });
+  }
+
+  return new Request(url, init);
+}
+
+/** Écrit une `Response` standard sur un flux `node:http`. */
+async function writeWebResponse(res, response) {
+  res.writeHead(response.status, Object.fromEntries(response.headers));
+  res.end(Buffer.from(await response.arrayBuffer()));
+}
+
 /**
  * Construit le serveur HTTP de l'application.
  * Exporté pour permettre les tests sans ouvrir de port fixe.
  */
 export function createApp() {
-  return createServer((req, res) => {
-    const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
-
-    if (url.pathname === '/health') {
-      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ statut: 'ok', service: 'prevensante', version: '0.1.0' }));
-      return;
+  return createServer(async (req, res) => {
+    try {
+      await writeWebResponse(res, await handleRequest(await toWebRequest(req)));
+    } catch (erreur) {
+      res.writeHead(500, { 'content-type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ erreur: 'erreur interne', detail: String(erreur?.message ?? erreur) }));
     }
-
-    if (url.pathname === '/') {
-      res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });
-      res.end('PrevEnSanté — socle applicatif opérationnel.\n');
-      return;
-    }
-
-    res.writeHead(404, { 'content-type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ erreur: 'ressource introuvable', chemin: url.pathname }));
   });
 }
 
