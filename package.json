@@ -13,11 +13,20 @@
     "test": "node --test",
     "dev:web": "npm --prefix web run dev",
     "build:web": "npm --prefix web run build",
-    "preview:web": "npm --prefix web run preview"
+    "preview:web": "npm --prefix web run preview",
+    "migrations:parse": "node tools/valider-migrations.mjs",
+    "migrations:run": "node tools/executer-migrations.mjs",
+    "migrations:coherence": "node tools/coherence-migrations.mjs",
+    "migrations:colonnes": "node tools/colonnes-migrations.mjs",
+    "db:test": "node tools/test-fonctionnel.mjs"
   },
   "keywords": [],
   "license": "UNLICENSED",
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.11",
+    "@electric-sql/pglite-pgvector": "^0.0.12",
+    "@electric-sql/pglite-postgis": "^0.2.11",
+    "pgsql-parser": "^18.3.1",
     "supabase": "2.122.0"
   },
   "dependencies": {

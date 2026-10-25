@@ -36,13 +36,19 @@ $$;
 
 -- Liste des sites visibles par l'utilisateur courant.
 -- Administrateur : tous les sites. Les autres : les sites du profile_sites.
+-- L'union est indispensable : un CASE dont une branche est une sous-requête
+-- scalaire échoue avec « more than one row returned by a subquery used as an
+-- expression » dès que l'utilisateur a plus d'un site.
 create or replace function app.sites_visibles()
 returns setof uuid
 language sql stable security definer set search_path = public, app as $$
-  select case
-    when app.est_administrateur() then (select id from app.sites)
-    else (select site_id from app.profile_sites where profile_id = auth.uid())
-  end;
+  select s.id
+  from app.sites s
+  where app.est_administrateur()
+  union
+  select ps.site_id
+  from app.profile_sites ps
+  where ps.profile_id = auth.uid();
 $$;
 
 -- Un site donné est-il dans le périmètre de l'utilisateur ?
