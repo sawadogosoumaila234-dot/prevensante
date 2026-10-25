@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { handleRequest } from '../src/app.js';
-import { createApp } from '../src/index.js';
+import { handleRequest } from '../server/app.js';
+import { createApp } from '../server/index.js';
 
 // --- Tests unitaires du routeur (aucun port, aucun réseau) ---
 

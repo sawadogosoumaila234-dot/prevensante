@@ -8,9 +8,12 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js",
-    "test": "node --test"
+    "dev": "node --watch server/index.js",
+    "start": "node server/index.js",
+    "test": "node --test",
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "preview:web": "npm --prefix web run preview"
   },
   "keywords": [],
   "license": "UNLICENSED",
