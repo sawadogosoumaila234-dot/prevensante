@@ -24,3 +24,12 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Ajouts automatiques par Vercel CLI (doublons des règles ci-dessus)
+.vercel
+.env*
+
+# Cette exception DOIT rester en dernier : dans .gitignore, le dernier motif
+# qui correspond gagne. Sans elle, le '.env*' ajouté par Vercel ignore aussi
+# le modèle .env.example, qui doit rester versionné.
+!.env.example
