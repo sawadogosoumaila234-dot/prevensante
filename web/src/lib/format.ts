@@ -44,7 +44,7 @@ export const LIBELLE_STATUT: Record<string, string> = {
 /**
  * Variante CSS de la pastille d'état.
  *
- * Le CSS ne définit que des variantes sémantiques (todo/progress/verify/
+ * Le CSS ne définit que des variantes sémantiques (todo/encours/verify/
  * closed/late) : passer directement le statut métier ('nouveau',
  * 'a_faire'…) produirait une pastille sans couleur. Ce mapping fait le
  * lien entre les deux vocabulaires.
@@ -53,13 +53,13 @@ export const VARIANTE_STATUT: Record<string, string> = {
   // Signalements
   nouveau: 'todo',
   en_qualification: 'verify',
-  qualifie: 'progress',
-  en_traitement: 'progress',
+  qualifie: 'encours',
+  en_traitement: 'encours',
   clos: 'closed',
   rejete: 'late',
   // Actions correctives
   a_faire: 'todo',
-  en_cours: 'progress',
+  en_cours: 'encours',
   a_verifier: 'verify',
   cloturee: 'closed',
   // Misc

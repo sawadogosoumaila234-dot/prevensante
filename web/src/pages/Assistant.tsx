@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert, Card, ListeItem } from '../components/ui';
+import { Alert, Card, Chip, ListeItem } from '../components/ui';
 import { CONSIGNES } from '../data/demo';
 
 interface Message {
@@ -224,9 +224,9 @@ export default function Assistant() {
                   emoji="📄"
                   titre={c.titre}
                   droite={
-                    <span className={`chip ${c.statut === 'validee' ? 'closed' : 'verify'}`}>
+                    <Chip variante={c.statut === 'validee' ? 'closed' : 'verify'}>
                       {c.statut === 'validee' ? 'Validée' : 'En révision'}
-                    </span>
+                    </Chip>
                   }
                 />
               ))}

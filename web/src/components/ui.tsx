@@ -60,7 +60,9 @@ export function Stat({
 /* ── ÉTAT ─────────────────────────────────────────────── */
 
 export function Chip({ variante, children }: { variante: string; children: ReactNode }) {
-  return <span className={`chip ${variante}`}>{children}</span>;
+  // Le préfixe « c- » évite toute collision avec une classe utilitaire
+  // homonyme (.todo, .late, .site…) dans un conteneur parent.
+  return <span className={`chip c-${variante}`}>{children}</span>;
 }
 
 export function Alert({
@@ -349,7 +351,7 @@ export function ActionCard({
         <span>🏢 {site}</span>
         <span>🔗 {reference}</span>
       </div>
-      <div className="progress">
+      <div className="jauge">
         <div className="fill" style={{ width: `${avancement}%` }} />
       </div>
     </div>

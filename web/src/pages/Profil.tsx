@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert, Card, Interrupteur, ListeItem, Stat } from '../components/ui';
+import { Alert, Card, Chip, Interrupteur, ListeItem, Stat } from '../components/ui';
 
 export default function Profil() {
   const [prefs, setPrefs] = useState({
@@ -55,7 +55,7 @@ export default function Profil() {
               <ListeItem
                 emoji="📧"
                 titre="s.ouedraogo@exemple.bf"
-                droite={<span className="chip closed">Vérifié</span>}
+                droite={<Chip variante="closed">Vérifié</Chip>}
               />
               <ListeItem
                 emoji="🕐"
