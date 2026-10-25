@@ -1,0 +1,23 @@
+{
+  "name": "prevensante",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PrevEnSanté — plateforme multisectorielle de prévention des risques professionnels",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "keywords": [],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "supabase": "2.122.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0"
+  }
+}

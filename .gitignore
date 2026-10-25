@@ -1,0 +1,26 @@
+# Dépendances et artefacts de build
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Secrets — NE JAMAIS committer
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# Supabase (temporaires locaux uniquement — aucun conteneur dans ce projet)
+supabase/.temp/
+supabase/.branches/
+
+# Divers
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

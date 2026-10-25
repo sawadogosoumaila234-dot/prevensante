@@ -1,0 +1,19 @@
+# Normalisation des fins de ligne.
+# Le dépôt stocke en LF (Linux) : le déploiement Vercel tourne sous Linux.
+# La copie de travail Windows reste en CRLF pour les éditeurs natifs.
+* text=auto
+
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+*.sql   text eol=lf
+
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.pdf   binary
