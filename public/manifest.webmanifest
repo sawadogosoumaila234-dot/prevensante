@@ -1,0 +1,16 @@
+{
+  "name": "PrevEnSanté — Prévention des risques professionnels",
+  "short_name": "PrevEnSanté",
+  "description": "Signalement des dangers, suivi des accidents et des actions correctives pour les mines, cimenteries, usines et chantiers.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a237e",
+  "theme_color": "#1a237e",
+  "lang": "fr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

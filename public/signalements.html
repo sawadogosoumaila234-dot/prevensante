@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1a237e" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="assets/icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Signalements — PrevEnSanté</title>
+<link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+<header class="header">
+  <a class="brand" href="index.html"><span class="logo">⚕</span><span>PrevEnSanté</span></a>
+  <span class="spacer"></span>
+  <div class="header-search">🔍 Rechercher un signalement, un site, une consigne…</div>
+  <a class="icon-btn" href="notifications.html" title="Notifications">🔔<span class="badge-dot"></span></a>
+  <div class="user-chip">
+    <span class="avatar">SO</span>
+    <span><span class="who">Soumaïla O.</span><span class="role">Responsable HSE</span></span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <a class="side-cta" href="signaler.html">⚠️ Signaler un danger</a>
+    <div class="side-label">Pilotage</div>
+
+        <a class="side-link" href="index.html">
+          <span class="em">🏠</span>Tableau de bord
+        </a>
+        <a class="side-link active" href="signalements.html">
+          <span class="em">📋</span>Signalements<span class="count">24</span>
+        </a>
+        <a class="side-link" href="actions.html">
+          <span class="em">✅</span>Actions correctives<span class="count">3</span>
+        </a>
+        <a class="side-link" href="pilotage.html">
+          <span class="em">📊</span>Pilotage & rapports
+        </a>
+        <a class="side-link" href="assistant.html">
+          <span class="em">🤖</span>Assistant IA
+        </a>
+        <a class="side-link" href="notifications.html">
+          <span class="em">🔔</span>Notifications<span class="count">3</span>
+        </a>
+        <a class="side-link" href="sites.html">
+          <span class="em">🏢</span>Sites & zones
+        </a>
+        <a class="side-link" href="profil.html">
+          <span class="em">👤</span>Profil & réglages
+        </a>
+    <div class="side-label">Application</div>
+    <a class="side-link" href="showcase.html"><span class="em">🎨</span>Page de présentation</a>
+    <a class="side-link" href="prototype.html"><span class="em">📱</span>Prototype mobile</a>
+  </nav>
+
+  <main class="main">
+    <div class="wrap">
+
+      <div class="page-head row">
+        <div>
+          <h1>Signalements</h1>
+          <div class="sub">Tous les événements de votre périmètre · dangers, incidents et accidents</div>
+        </div>
+        <a class="btn yellow" href="signaler.html">⚠️ Nouveau signalement</a>
+      </div>
+
+      <div class="grid grid-4" style="margin-bottom:16px">
+        <div class="stat total"><div class="bar"></div><div class="label">Total</div><div class="value">24</div><div class="trend">sur 30 jours</div></div>
+        <div class="stat info"><div class="bar"></div><div class="label">Dangers</div><div class="value">14</div><div class="trend">58 % des signalements</div></div>
+        <div class="stat open"><div class="bar"></div><div class="label">Incidents</div><div class="value">7</div><div class="trend">dont 2 récurrents</div></div>
+        <div class="stat late"><div class="bar"></div><div class="label">Accidents</div><div class="value">3</div><div class="trend down">1 arrêt de travail en cours</div></div>
+      </div>
+
+      <div class="filters" id="reportFilters">
+        <button class="filter active" data-f="all">Tous (24)</button>
+        <button class="filter" data-f="danger">Dangers (14)</button>
+        <button class="filter" data-f="incident">Incidents (7)</button>
+        <button class="filter" data-f="accident">Accidents (3)</button>
+        <button class="filter" data-f="prio">Prioritaires</button>
+        <button class="filter" data-f="open">En cours</button>
+        <button class="filter" data-f="closed">Clôturés</button>
+      </div>
+
+      <div id="all-reports"></div>
+
+      <div class="card">
+        <h3>Export et rapports</h3>
+        <div class="card-sub">Les rapports tiennent compte du périmètre de chaque responsable</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn secondary sm">⬇︎ Export CSV — 30 jours</button>
+          <button class="btn secondary sm">⬇︎ Export PDF — par site</button>
+          <button class="btn ghost sm">🖨︎ Imprimer la liste</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<nav class="bottom-nav">
+<a href="index.html"><span class="em">🏠</span>Accueil</a><a href="signalements.html" class="active"><span class="em">📋</span>Signalements</a><a href="actions.html"><span class="em">✅</span>Actions</a><a href="pilotage.html"><span class="em">📊</span>Pilotage</a><a href="profil.html"><span class="em">👤</span>Profil</a>
+</nav>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

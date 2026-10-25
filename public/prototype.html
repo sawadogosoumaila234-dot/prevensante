@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0d9488" />
+<title>PrevEnSanté — Prototype</title>
+<!-- Prototype non fonctionnel — données mockées, aucune logique métier réelle.
+     Inspiré des templates PWA mobiles ODIS (teal/Materialize) et Affan (navy/Bootstrap). -->
+<style>
+  :root {
+    --brand: #0d9488;
+    --brand-dark: #0f766e;
+    --brand-soft: #ccfbf1;
+    --accent: #f59e0b;        /* amber = sécurité */
+    --accent-soft: #fef3c7;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --ok: #16a34a;
+    --ok-soft: #dcfce7;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --info: #2563eb;
+    --info-soft: #dbeafe;
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --nav-h: 64px;
+    --header-h: 56px;
+  }
+  [data-theme="dark"] {
+    --brand: #2dd4bf;
+    --brand-dark: #14b8a6;
+    --brand-soft: #134e4a;
+    --accent: #fbbf24;
+    --accent-soft: #422006;
+    --danger: #f87171;
+    --danger-soft: #450a0a;
+    --ok: #4ade80;
+    --ok-soft: #052e16;
+    --warn: #fbbf24;
+    --warn-soft: #422006;
+    --info: #60a5fa;
+    --info-soft: #172554;
+    --bg: #0b1120;
+    --surface: #111827;
+    --surface-2: #0f172a;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #1e293b;
+    --shadow: 0 1px 3px rgba(0,0,0,.4);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,.5);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(13,148,136,.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(245,158,11,.07), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 12px;
+  }
+  /* Cadre téléphone — plein écran sur mobile, mockup centré sur desktop */
+  .phone {
+    position: relative;
+    width: 100%; max-width: 420px;
+    height: min(880px, 100vh - 24px);
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  @media (max-width: 480px) {
+    body { padding: 0; }
+    .phone { max-width: 100%; height: 100vh; border-radius: 0; border: none; }
+  }
+  /* Encoche */
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 150px; height: 26px; background: #000; border-radius: 0 0 18px 18px; z-index: 50;
+  }
+  [data-theme="dark"] .notch { background: #000; }
+  /* Barre d'état */
+  .statusbar {
+    height: 38px; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 22px 4px; font-size: 13px; font-weight: 600; color: var(--text);
+    flex-shrink: 0;
+  }
+  .statusbar .icons { display: flex; gap: 5px; align-items: center; font-size: 12px; }
+  /* En-tête applicatif */
+  .header {
+    height: var(--header-h); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .header .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 17px; }
+  .header .brand .logo {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    display: grid; place-items: center; color: #fff; font-size: 16px;
+  }
+  .header .actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--surface-2); color: var(--text); display: grid; place-items: center;
+    font-size: 17px; position: relative;
+  }
+  .icon-btn:active { transform: scale(.94); }
+  .badge-dot {
+    position: absolute; top: 7px; right: 8px; width: 8px; height: 8px;
+    background: var(--danger); border-radius: 50%; border: 2px solid var(--surface);
+  }
+  /* Zone défilante */
+  .scroll {
+    flex: 1; overflow-y: auto; padding: 14px 14px calc(var(--nav-h) + 18px);
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll::-webkit-scrollbar { width: 0; }
+  /* Écrans */
+  .screen { display: none; animation: fade .25s ease; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  /* Titre d'écran */
+  .screen-title { font-size: 22px; font-weight: 700; margin: 2px 0 2px; }
+  .screen-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }
+  /* Cartes */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); margin-bottom: 12px;
+  }
+  /* Grille de statistiques */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; position: relative; overflow: hidden;
+  }
+  .stat .label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .stat .value { font-size: 28px; font-weight: 800; margin-top: 2px; line-height: 1; }
+  .stat .trend { font-size: 11px; margin-top: 6px; font-weight: 600; }
+  .stat .trend.up { color: var(--ok); } .stat .trend.down { color: var(--danger); }
+  .stat .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .stat.total .bar { background: var(--brand); }
+  .stat.open .bar { background: var(--accent); }
+  .stat.late .bar { background: var(--danger); }
+  .stat.closed .bar { background: var(--ok); }
+  /* Salutation */
+  .greet { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .greet .avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 18px;
+  }
+  .greet .hello { font-size: 13px; color: var(--text-muted); }
+  .greet .name { font-size: 17px; font-weight: 700; }
+  /* Bouton principal */
+  .btn {
+    width: 100%; border: none; cursor: pointer; border-radius: 12px;
+    padding: 13px 16px; font-size: 15px; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform .1s; margin-bottom: 12px;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn.secondary { background: var(--surface); color: var(--brand); border: 1.5px solid var(--brand); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn.danger { background: var(--danger); }
+  /* Sections */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
+  .section-head h3 { font-size: 15px; font-weight: 700; }
+  .section-head a { font-size: 12px; color: var(--brand); cursor: pointer; font-weight: 600; }
+  /* Élément de liste / signalement */
+  .report {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px;
+  }
+  .report .ic {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 18px;
+  }
+  .ic.danger { background: var(--danger-soft); color: var(--danger); }
+  .ic.incident { background: var(--accent-soft); color: var(--warn); }
+  .ic.accident { background: var(--info-soft); color: var(--info); }
+  .report .body { flex: 1; min-width: 0; }
+  .report .row1 { display: flex; justify-content: space-between; gap: 8px; }
+  .report .title { font-weight: 600; font-size: 14px; }
+  .report .id { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+  .report .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .report .desc { font-size: 13px; margin-top: 4px; color: var(--text); }
+  .report .tags { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  /* Pastilles de statut */
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+  }
+  .chip.todo { background: var(--surface-2); color: var(--text-muted); }
+  .chip.progress { background: var(--info-soft); color: var(--info); }
+  .chip.verify { background: var(--accent-soft); color: var(--warn); }
+  .chip.closed { background: var(--ok-soft); color: var(--ok); }
+  .chip.late { background: var(--danger-soft); color: var(--danger); }
+  .chip.cat { background: var(--brand-soft); color: var(--brand-dark); }
+  .chip.site { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+  /* Filtres */
+  .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 4px; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer;
+  }
+  .filter.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  /* Formulaire */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field label .req { color: var(--danger); }
+  .input, .select, .textarea {
+    width: 100%; padding: 12px 14px; border-radius: 12px; font-size: 15px; font-family: inherit;
+    background: var(--surface); border: 1.5px solid var(--border); color: var(--text);
+    outline: none; transition: border-color .15s;
+  }
+  .input:focus, .select:focus, .textarea:focus { border-color: var(--brand); }
+  .textarea { resize: vertical; min-height: 90px; }
+  .select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L2 4h8z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  /* Sélecteur de type (chips larges) */
+  .type-picker { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+  .type-card {
+    border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 8px; text-align: center;
+    cursor: pointer; background: var(--surface); transition: all .15s;
+  }
+  .type-card .em { font-size: 22px; display: block; margin-bottom: 4px; }
+  .type-card .lab { font-size: 12px; font-weight: 700; }
+  .type-card.sel { border-color: var(--brand); background: var(--brand-soft); }
+  .type-card[data-type="accident"].sel { border-color: var(--danger); background: var(--danger-soft); }
+  .type-card[data-type="incident"].sel { border-color: var(--accent); background: var(--accent-soft); }
+  /* Zone photo */
+  .photo-zone {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 22px; text-align: center;
+    color: var(--text-muted); cursor: pointer; background: var(--surface-2);
+  }
+  .photo-zone .em { font-size: 28px; }
+  .photo-zone .t { font-size: 13px; font-weight: 600; margin-top: 4px; color: var(--text); }
+  /* Alerte danger grave (CR07) */
+  .alert-grave {
+    display: flex; gap: 10px; align-items: flex-start; background: var(--danger-soft);
+    border: 1px solid var(--danger); border-radius: 12px; padding: 12px; margin-bottom: 14px;
+  }
+  .alert-grave .em { font-size: 20px; flex-shrink: 0; }
+  .alert-grave .t { font-size: 13px; font-weight: 700; color: var(--danger); }
+  .alert-grave .d { font-size: 12px; color: var(--text); margin-top: 2px; }
+  /* Mini graphique CSS */
+  .chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding: 10px 4px 0; }
+  .chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart .col .b { width: 100%; max-width: 22px; border-radius: 6px 6px 0 0; background: linear-gradient(var(--brand), var(--brand-dark)); }
+  .chart .col .x { font-size: 10px; color: var(--text-muted); }
+  /* IA — chat */
+  .chat { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .msg { max-width: 85%; padding: 11px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; }
+  .msg.user { align-self: flex-end; background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.ai { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.ai .role { font-size: 11px; font-weight: 700; color: var(--brand); margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+  .msg.ai .refs { margin-top: 8px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 7px; }
+  .msg.ai .ref { display: flex; gap: 6px; margin-top: 4px; }
+  .msg.ai .ref .ic { font-size: 13px; }
+  .ai-disclaimer { font-size: 11px; color: var(--text-muted); text-align: center; padding: 8px; }
+  .ai-input { display: flex; gap: 8px; position: sticky; bottom: 0; background: var(--surface); padding-top: 8px; border-top: 1px solid var(--border); }
+  .ai-input .input { flex: 1; }
+  .ai-send { border: none; background: var(--brand); color: #fff; border-radius: 12px; padding: 0 16px; font-size: 18px; cursor: pointer; }
+  /* Profil */
+  .profile-head { text-align: center; padding: 18px 0 10px; }
+  .profile-head .avatar { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 10px; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #fff; display: grid; place-items: center; font-size: 30px; font-weight: 700; }
+  .profile-head .name { font-size: 18px; font-weight: 700; }
+  .profile-head .role { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .role-badge { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 20px; background: var(--brand-soft); color: var(--brand-dark); font-size: 12px; font-weight: 700; }
+  .list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .list-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .list-item:last-child { border-bottom: none; }
+  .list-item .em { font-size: 19px; width: 24px; text-align: center; }
+  .list-item .t { flex: 1; font-size: 14px; font-weight: 600; }
+  .list-item .d { font-size: 12px; color: var(--text-muted); }
+  .list-item .arrow { color: var(--text-muted); }
+  /* Interrupteur clair/sombre */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
+  .switch { position: relative; width: 48px; height: 28px; }
+  .switch input { display: none; }
+  .switch .track { position: absolute; inset: 0; border-radius: 20px; background: var(--border); transition: .2s; }
+  .switch .thumb { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .switch input:checked + .track { background: var(--brand); }
+  .switch input:checked + .track + .thumb { transform: translateX(20px); }
+  /* Action card */
+  .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px; margin-bottom: 10px; }
+  .action-card .top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .action-card .t { font-size: 14px; font-weight: 600; flex: 1; }
+  .action-card .who { font-size: 12px; color: var(--text-muted); margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .action-card .who span { display: inline-flex; align-items: center; gap: 3px; }
+  .action-card .progress { height: 6px; background: var(--border); border-radius: 4px; margin-top: 9px; overflow: hidden; }
+  .action-card .progress .fill { height: 100%; background: var(--brand); border-radius: 4px; }
+  /* Barre de navigation inférieure */
+  .nav {
+    position: absolute; bottom: 0; left: 0; right: 0; height: var(--nav-h);
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav button {
+    flex: 1; border: none; background: none; cursor: pointer; color: var(--text-muted);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 10px; font-weight: 600; font-family: inherit; position: relative;
+  }
+  .nav button .em { font-size: 21px; line-height: 1; }
+  .nav button.active { color: var(--brand); }
+  .nav button.active::before {
+    content: ''; position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 4px 4px; background: var(--brand);
+  }
+  /* Sélecteur de rôle (mock) */
+  .seg { display: flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 3px; margin-bottom: 14px; }
+  .seg button { flex: 1; border: none; background: none; padding: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted); border-radius: 9px; cursor: pointer; font-family: inherit; }
+  .seg button.active { background: var(--brand); color: #fff; }
+  .label-pill { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin: 16px 0 8px; }
+  .empty { text-align: center; color: var(--text-muted); padding: 30px 0; font-size: 14px; }
+  .empty .em { font-size: 40px; display: block; margin-bottom: 8px; opacity: .4; }
+  .hint { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 4px; }
+  .proto-banner { text-align: center; font-size: 10px; color: var(--text-muted); padding: 6px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+  .proto-banner b { color: var(--accent); }
+  /* Mode embarqué (?embed=1) : la maquette est déjà entourée d'un cadre appareil */
+  body.embed { padding: 0; }
+  body.embed .phone { border-radius: 0; border: none; box-shadow: none; max-width: 100%; height: 100vh; }
+  body.embed .notch { display: none; }
+  body.embed .proto-banner { display: none; }
+  body.embed .statusbar { height: 30px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- Barre d'état -->
+  <div class="statusbar">
+    <span class="time">10:24</span>
+    <span class="icons">📶 5G 🔋 82%</span>
+  </div>
+
+  <div class="proto-banner">Prototype non fonctionnel · données fictives · <b>PrevEnSanté</b></div>
+
+  <!-- En-tête -->
+  <div class="header">
+    <div class="brand">
+      <span class="logo">⚕</span>
+      <span>PrevEnSanté</span>
+    </div>
+    <div class="actions">
+      <button class="icon-btn" onclick="toggleTheme()" title="Thème">🌓</button>
+      <button class="icon-btn" onclick="nav('notif')" title="Notifications">🔔<span class="badge-dot"></span></button>
+    </div>
+  </div>
+
+  <!-- Zone de contenu défilante -->
+  <div class="scroll" id="scroll">
+
+    <!-- ════════ ÉCRAN 1 : TABLEAU DE BORD ════════ -->
+    <section class="screen active" id="screen-home">
+      <div class="greet">
+        <div class="avatar">SO</div>
+        <div>
+          <div class="hello">Bonjour,</div>
+          <div class="name">Soumaïla O.</div>
+        </div>
+      </div>
+
+      <div class="seg" id="roleSeg">
+        <button class="active" data-role="travailleur">Travailleur</button>
+        <button data-role="hse">Responsable HSE</button>
+        <button data-role="admin">Admin</button>
+      </div>
+
+      <button class="btn" onclick="nav('signaler')">
+        <span style="font-size:18px">⚠</span> Signaler un danger / incident
+      </button>
+
+      <div class="stats">
+        <div class="stat total"><div class="bar"></div><div class="label">Signalements</div><div class="value">24</div><div class="trend up">▲ 12% vs sem.</div></div>
+        <div class="stat open"><div class="bar"></div><div class="label">En cours</div><div class="value">8</div><div class="trend">3 cette semaine</div></div>
+        <div class="stat late"><div class="bar"></div><div class="label">En retard</div><div class="value">3</div><div class="trend down">⚠ à traiter</div></div>
+        <div class="stat closed"><div class="bar"></div><div class="label">Clôturés</div><div class="value">12</div><div class="trend up">▲ 5 ce mois</div></div>
+      </div>
+
+      <div class="section-head"><h3>Signalements récents</h3><a onclick="nav('liste')">Tout voir</a></div>
+      <div id="recent-reports"></div>
+
+      <div class="section-head"><h3>Actions en retard</h3><a onclick="nav('actions')">Voir</a></div>
+      <div id="late-actions"></div>
+    </section>
+
+    <!-- ════════ ÉCRAN 2 : NOUVEAU SIGNALEMENT (F02) ════════ -->
+    <section class="screen" id="screen-signaler">
+      <div class="screen-title">Nouveau signalement</div>
+      <div class="screen-sub">Type, localisation, description et catégorie · F02</div>
+
+      <div class="alert-grave">
+        <span class="em">🚨</span>
+        <div><div class="t">Danger grave ou immédiat ?</div><div class="d">Mettez-vous en sécurité d'abord et appliquez les procédures du site. Le signalement ne remplace pas l'alerte.</div></div>
+      </div>
+
+      <div class="field">
+        <label>Type d'événement <span class="req">*</span></label>
+        <div class="type-picker" id="typePicker">
+          <div class="type-card sel" data-type="danger"><span class="em">⚠️</span><span class="lab">Danger</span></div>
+          <div class="type-card" data-type="incident"><span class="em">⚡</span><span class="lab">Incident</span></div>
+          <div class="type-card" data-type="accident"><span class="em">🚑</span><span class="lab">Accident</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Site <span class="req">*</span></label>
+        <select class="select">
+          <option>Mine de Poura — Zone Nord</option>
+          <option>Carrière de Bobo</option>
+          <option>Cimenterie de Kossodo</option>
+          <option>Usine agro — Bobo-Dioulasso</option>
+          <option>Entrepôt logistique — Ouaga</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Zone <span class="req">*</span></label>
+        <select class="select">
+          <option>Front de taille — galerie 3</option>
+          <option>Concasseur primaire</option>
+          <option>Zone de stockage</option>
+          <option>Atelier de maintenance</option>
+          <option>Quai de chargement</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Date et heure <span class="req">*</span></label>
+        <input class="input" type="datetime-local" value="2026-10-25T10:15" />
+      </div>
+
+      <div class="field">
+        <label>Catégorie de risque <span class="req">*</span></label>
+        <select class="select">
+          <option>Mécanique — machine / équipement</option>
+          <option>Électrique</option>
+          <option>Chute de hauteur</option>
+          <option>Chute d'objet</option>
+          <option>Produit chimique</option>
+          <option>Manutention / effort</option>
+          <option>Environnement (poussière, bruit)</option>
+          <option>Incendie / explosion</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Description <span class="req">*</span></label>
+        <textarea class="textarea" placeholder="Décrivez ce qui s'est passé, les circonstances, les personnes concernées…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Photo (facultatif)</label>
+        <div class="photo-zone">
+          <div class="em">📷</div>
+          <div class="t">Ajouter une photo</div>
+          <div style="font-size:11px;margin-top:2px">JPG, PNG — max 5 Mo</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Équipement concerné (facultatif)</label>
+        <input class="input" placeholder="Ex. : Chargeuse LHD, convoyeur n°2…" />
+      </div>
+
+      <button class="btn" onclick="fakeSubmit()">Soumettre le signalement</button>
+      <div class="hint">Un identifiant unique sera attribué automatiquement.</div>
+    </section>
+
+    <!-- ════════ ÉCRAN 3 : MES SIGNALEMENTS ════════ -->
+    <section class="screen" id="screen-liste">
+      <div class="screen-title">Signalements</div>
+      <div class="screen-sub">Tous les événements de votre périmètre</div>
+      <div class="filters" id="reportFilters">
+        <div class="filter active" data-f="all">Tous</div>
+        <div class="filter" data-f="danger">Dangers</div>
+        <div class="filter" data-f="incident">Incidents</div>
+        <div class="filter" data-f="accident">Accidents</div>
+        <div class="filter" data-f="open">En cours</div>
+        <div class="filter" data-f="closed">Clôturés</div>
+      </div>
+      <div id="all-reports"></div>
+    </section>
+
+    <!-- ════════ ÉCRAN 4 : ACTIONS CORRECTIVES (F03) ════════ -->
+    <section class="screen" id="screen-actions">
+      <div class="screen-title">Actions correctives</div>
+      <div class="screen-sub">Affectation, échéances et statuts · F03</div>
+      <div class="filters" id="actionFilters">
+        <div class="filter active" data-f="all">Toutes</div>
+        <div class="filter" data-f="todo">À faire</div>
+        <div class="filter" data-f="progress">En cours</div>
+        <div class="filter" data-f="verify">À vérifier</div>
+        <div class="filter" data-f="closed">Clôturées</div>
+        <div class="filter" data-f="late">En retard</div>
+      </div>
+      <div id="all-actions"></div>
+    </section>
+
+    <!-- ════════ ÉCRAN 5 : PILOTAGE (F04) ════════ -->
+    <section class="screen" id="screen-pilotage">
+      <div class="screen-title">Pilotage</div>
+      <div class="screen-sub">Indicateurs par site, zone et période · F04</div>
+      <div class="filters">
+        <div class="filter active">Tous sites</div>
+        <div class="filter">30 jours</div>
+        <div class="filter">90 jours</div>
+        <div class="filter">Cette année</div>
+      </div>
+      <div class="stats">
+        <div class="stat total"><div class="bar"></div><div class="label">Total événements</div><div class="value">48</div></div>
+        <div class="stat open"><div class="bar"></div><div class="label">Taux clôture</div><div class="value">71%</div></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">Évolution mensuelle</div>
+        <div style="font-size:12px;color:var(--text-muted)">Signalements par mois (2026)</div>
+        <div class="chart">
+          <div class="col"><div class="b" style="height:40%"></div><div class="x">Jan</div></div>
+          <div class="col"><div class="b" style="height:55%"></div><div class="x">Fév</div></div>
+          <div class="col"><div class="b" style="height:30%"></div><div class="x">Mar</div></div>
+          <div class="col"><div class="b" style="height:70%"></div><div class="x">Avr</div></div>
+          <div class="col"><div class="b" style="height:48%"></div><div class="x">Mai</div></div>
+          <div class="col"><div class="b" style="height:62%"></div><div class="x">Juin</div></div>
+          <div class="col"><div class="b" style="height:85%"></div><div class="x">Juil</div></div>
+          <div class="col"><div class="b" style="height:58%"></div><div class="x">Aoû</div></div>
+          <div class="col"><div class="b" style="height:74%"></div><div class="x">Sep</div></div>
+          <div class="col"><div class="b" style="height:90%;background:linear-gradient(var(--accent),var(--warn))"></div><div class="x">Oct</div></div>
+        </div>
+      </div>
+      <div class="section-head"><h3>Répartition par catégorie</h3></div>
+      <div class="card" style="padding:6px 14px">
+        <div id="cat-bars"></div>
+      </div>
+      <div class="section-head"><h3>Priorités</h3></div>
+      <div id="prio-actions"></div>
+    </section>
+
+    <!-- ════════ ÉCRAN 6 : ASSISTANCE IA (F05) ════════ -->
+    <section class="screen" id="screen-ia">
+      <div class="screen-title">Assistant IA</div>
+      <div class="screen-sub">Classification & consignes · F05 — suggestions à vérifier</div>
+      <div class="chat" id="chat">
+        <div class="msg ai">
+          <div class="role">🤖 Assistant PrevEnSanté</div>
+          Bonjour. Décrivez une situation et je proposerai une catégorie de risque et des consignes issues des documents validés. Je ne remplace pas un responsable HSE.
+          <div class="refs"><div class="ref"><span class="ic">📄</span> Corpus : 142 consignes validées</div></div>
+        </div>
+        <div class="msg user">Un ouvrier a glissé sur un sol huileux près du concasseur, sans blessure. Que faire ?</div>
+        <div class="msg ai">
+          <div class="role">🤖 Proposition de catégorie</div>
+          <b>Manutention / environnement</b> — Risque de glissade sur surface souillée.
+          <div style="margin-top:6px"><b>Conseils immédiats :</b></div>
+          <div style="font-size:13px;margin-top:4px">1. Baliser la zone et nettoyer le sol huileux.<br>2. Vérifier l'EPI antidérapant.<br>3. Signaler un entretien préventif du concasseur.</div>
+          <div class="refs">
+            <div class="ref"><span class="ic">📚</span> Consigne C-042 « Nettoyage des zones mécaniques »</div>
+            <div class="ref"><span class="ic">📚</span> Consigne C-118 « EPI — chaussures de sécurité S3 »</div>
+            <div class="ref"><span class="ic">⚠️</span> Limites : classification automatique, à valider par un responsable.</div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-disclaimer">⚠ L'IA ne doit jamais retarder une intervention urgente. En cas de danger grave, appliquez d'abord les procédures du site.</div>
+      <div class="ai-input">
+        <input class="input" id="aiText" placeholder="Décrivez une situation…" />
+        <button class="ai-send" onclick="aiSend()">➤</button>
+      </div>
+    </section>
+
+    <!-- ════════ ÉCRAN 7 : NOTIFICATIONS ════════ -->
+    <section class="screen" id="screen-notif">
+      <div class="screen-title">Notifications</div>
+      <div class="screen-sub">3 non lues</div>
+      <div id="notif-list"></div>
+    </section>
+
+    <!-- ════════ ÉCRAN 8 : PROFIL & RÉGLAGES ════════ -->
+    <section class="screen" id="screen-profil">
+      <div class="profile-head">
+        <div class="avatar">SO</div>
+        <div class="name">Soumaïla Ouédraogo</div>
+        <div class="role">Travailleur — Mine de Poura (Zone Nord)</div>
+        <span class="role-badge">Profil actif</span>
+      </div>
+
+      <div class="switch-row" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px">
+        <div><div style="font-weight:600;font-size:14px">Mode sombre</div><div style="font-size:12px;color:var(--text-muted)">Interface claire / sombre</div></div>
+        <label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="track"></span><span class="thumb"></span></label>
+      </div>
+
+      <div class="label-pill">Compte</div>
+      <div class="list">
+        <div class="list-item" onclick="nav('liste')"><span class="em">📋</span><div><div class="t">Mes signalements</div><div class="d">24 au total</div></div><span class="arrow">›</span></div>
+        <div class="list-item" onclick="nav('ia')"><span class="em">🤖</span><div><div class="t">Assistant IA</div><div class="d">Classification & consignes</div></div><span class="arrow">›</span></div>
+        <div class="list-item"><span class="em">🔔</span><div><div class="t">Notifications</div><div class="d">Push, email</div></div><span class="arrow">›</span></div>
+      </div>
+
+      <div class="label-pill">Référentiels (admin)</div>
+      <div class="list">
+        <div class="list-item"><span class="em">🏢</span><div><div class="t">Sites & zones</div><div class="d">5 sites, 18 zones</div></div><span class="arrow">›</span></div>
+        <div class="list-item"><span class="em">🗂</span><div><div class="t">Catégories de risques</div><div class="d">8 catégories</div></div><span class="arrow">›</span></div>
+        <div class="list-item"><span class="em">👥</span><div><div class="t">Utilisateurs & rôles</div><div class="d">32 comptes</div></div><span class="arrow">›</span></div>
+        <div class="list-item"><span class="em">📚</span><div><div class="t">Bibliothèque de consignes</div><div class="d">142 documents validés</div></div><span class="arrow">›</span></div>
+      </div>
+
+      <div class="label-pill">Autres</div>
+      <div class="list">
+        <div class="list-item"><span class="em">ℹ️</span><div><div class="t">À propos</div><div class="d">PrevEnSanté v0.1.0 — prototype</div></div><span class="arrow">›</span></div>
+        <div class="list-item" style="color:var(--danger)"><span class="em">🚪</span><div class="t">Déconnexion</div><span class="arrow">›</span></div>
+      </div>
+    </section>
+
+  </div><!-- /scroll -->
+
+  <!-- ════════ NAVIGATION INFÉRIEURE ════════ -->
+  <div class="nav">
+    <button class="active" data-screen="home" onclick="nav('home')"><span class="em">🏠</span>Accueil</button>
+    <button data-screen="signaler" onclick="nav('signaler')"><span class="em">⚠️</span>Signaler</button>
+    <button data-screen="actions" onclick="nav('actions')"><span class="em">✅</span>Actions</button>
+    <button data-screen="pilotage" onclick="nav('pilotage')"><span class="em">📊</span>Pilotage</button>
+    <button data-screen="profil" onclick="nav('profil')"><span class="em">👤</span>Profil</button>
+  </div>
+</div>
+
+<script>
+// Mode embarqué : utilisé quand le prototype est inséré dans un cadre appareil
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.body.classList.add('embed');
+}
+</script>
+<script>
+// ─────────── Données fictives (prototype non fonctionnel) ───────────
+const REPORTS = [
+  { id: 'SIG-2026-048', type: 'danger', title: 'Sol huileux près du concasseur', cat: 'Environnement', site: 'Mine de Poura', zone: 'Concasseur primaire', date: '25 oct. 10:12', status: 'progress', stext: 'En cours', late: false },
+  { id: 'SIG-2026-047', type: 'incident', title: 'Presque chute d’un bloc depuis le front', cat: 'Chute d’objet', site: 'Mine de Poura', zone: 'Front de taille — galerie 3', date: '24 oct. 15:40', status: 'todo', stext: 'À faire', late: false },
+  { id: 'SIG-2026-045', type: 'accident', title: 'Main pincée lors de la maintenance', cat: 'Mécanique', site: 'Cimenterie de Kossodo', zone: 'Atelier maintenance', date: '22 oct. 08:30', status: 'verify', stext: 'À vérifier', late: false },
+  { id: 'SIG-2026-041', type: 'danger', title: 'Câble électrique dénudé sur convoyeur', cat: 'Électrique', site: 'Usine agro', zone: 'Ligne de production 2', date: '18 oct. 11:05', status: 'closed', stext: 'Clôturé', late: false },
+  { id: 'SIG-2026-039', type: 'incident', title: 'Fuite de produit chimique — bidon', cat: 'Chimique', site: 'Carrière de Bobo', zone: 'Zone de stockage', date: '15 oct. 14:20', status: 'progress', stext: 'En cours', late: true },
+  { id: 'SIG-2026-036', type: 'danger', title: 'Engin de levage sans contrôle périodique', cat: 'Mécanique', site: 'Entrepôt logistique', zone: 'Quai de chargement', date: '10 oct. 09:00', status: 'todo', stext: 'À faire', late: true },
+  { id: 'SIG-2026-030', type: 'accident', title: 'Chute depuis un échafaudage (2 m)', cat: 'Chute de hauteur', site: 'BTP — Ouaga', zone: 'Chantier A', date: '03 oct. 16:10', status: 'closed', stext: 'Clôturé', late: false },
+];
+
+const ACTIONS = [
+  { t: 'Installer un bac de rétention sous le bidon', st: 'progress', stext: 'En cours', resp: 'M. Kaboré', due: '28 oct.', late: false, pct: 60 },
+  { t: 'Contrôle périodique de l’engin de levage n°4', st: 'todo', stext: 'À faire', resp: 'Service maintenance', due: '20 oct.', late: true, pct: 0 },
+  { t: 'Remplacer le câble dénudé du convoyeur 2', st: 'closed', stext: 'Clôturé', resp: 'Équipe élec.', due: '19 oct.', late: false, pct: 100 },
+  { t: 'Formation EPI antidérapant — équipe B', st: 'verify', stext: 'À vérifier', resp: 'Resp. HSE', due: '30 oct.', late: false, pct: 90 },
+  { t: 'Audit garde-corps chantier A', st: 'todo', stext: 'À faire', resp: 'Resp. HSE', due: '12 oct.', late: true, pct: 0 },
+  { t: 'Mise à jour du plan de consignation concasseur', st: 'progress', stext: 'En cours', resp: 'M. Traoré', due: '02 nov.', late: false, pct: 35 },
+];
+
+const NOTIFS = [
+  { em: '⚠️', t: 'Nouveau signalement SIG-2026-048', d: 'Sol huileux — Mine de Poura', time: 'il y a 12 min', unread: true },
+  { em: '🔴', t: 'Action en retard', d: 'Contrôle engin de levage n°4 — échéance 20 oct.', time: 'il y a 2 h', unread: true },
+  { em: '✅', t: 'Action clôturée', d: 'Câble convoyeur 2 remplacé', time: 'hier', unread: true },
+  { em: '🤖', t: 'Assistant IA', d: 'Nouvelle consigne ajoutée au corpus', time: 'hier', unread: false },
+];
+
+const CATS = [
+  { label: 'Mécanique', val: 14, color: 'var(--brand)' },
+  { label: 'Chute', val: 11, color: 'var(--accent)' },
+  { label: 'Électrique', val: 8, color: 'var(--info)' },
+  { label: 'Chimique', val: 6, color: '#a855f7' },
+  { label: 'Environnement', val: 5, color: 'var(--warn)' },
+  { label: 'Incendie', val: 4, color: 'var(--danger)' },
+];
+
+// ─────────── Rendu ───────────
+function reportHTML(r) {
+  const ic = { danger: '⚠️', incident: '⚡', accident: '🚑' }[r.type] || '⚠️';
+  return `<div class="report" onclick="nav('signaler')">
+    <div class="ic ${r.type}">${ic}</div>
+    <div class="body">
+      <div class="row1"><span class="title">${r.title}</span><span class="id">${r.id}</span></div>
+      <div class="meta">${r.site} · ${r.zone} · ${r.date}</div>
+      <div class="tags">
+        <span class="chip cat">${r.cat}</span>
+        <span class="chip ${r.status}">${r.stext}</span>
+        ${r.late ? '<span class="chip late">En retard</span>' : ''}
+      </div>
+    </div>
+  </div>`;
+}
+function actionHTML(a) {
+  const tags = `<span class="chip ${a.st}">${a.stext}</span>` + (a.late ? '<span class="chip late">En retard</span>' : '');
+  return `<div class="action-card">
+    <div class="top"><span class="t">${a.t}</span>${tags}</div>
+    <div class="who"><span>👤 ${a.resp}</span><span>📅 ${a.due}</span></div>
+    <div class="progress"><div class="fill" style="width:${a.pct}%"></div></div>
+  </div>`;
+}
+function notifHTML(n) {
+  return `<div class="report">
+    <div class="ic danger" style="background:${n.unread?'var(--brand-soft)':'var(--surface-2)'};color:${n.unread?'var(--brand)':'var(--text-muted)'}">${n.em}</div>
+    <div class="body">
+      <div class="row1"><span class="title">${n.t}</span></div>
+      <div class="desc">${n.d}</div>
+      <div class="meta">${n.time}${n.unread?' · <b style="color:var(--brand)">non lue</b>':''}</div>
+    </div>
+  </div>`;
+}
+
+function render() {
+  document.getElementById('recent-reports').innerHTML = REPORTS.slice(0, 3).map(reportHTML).join('');
+  document.getElementById('late-actions').innerHTML = ACTIONS.filter(a => a.late).map(actionHTML).join('') || '<div class="empty"><span class="em">✅</span>Aucune action en retard.</div>';
+  document.getElementById('all-reports').innerHTML = REPORTS.map(reportHTML).join('');
+  document.getElementById('all-actions').innerHTML = ACTIONS.map(actionHTML).join('');
+  document.getElementById('prio-actions').innerHTML = ACTIONS.filter(a => a.late || a.st === 'todo').slice(0, 3).map(actionHTML).join('');
+  document.getElementById('notif-list').innerHTML = NOTIFS.map(notifHTML).join('');
+  // Barres catégories
+  const max = Math.max(...CATS.map(c => c.val));
+  document.getElementById('cat-bars').innerHTML = CATS.map(c => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+      <span style="font-size:12px;width:90px;color:var(--text-muted);font-weight:600">${c.label}</span>
+      <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden"><div style="height:100%;width:${(c.val/max*100)}%;background:${c.color};border-radius:4px"></div></div>
+      <span style="font-size:12px;font-weight:700;width:22px;text-align:right">${c.val}</span>
+    </div>`).join('');
+}
+
+// ─────────── Navigation ───────────
+const NAV = ['home','signaler','actions','pilotage','profil','liste','ia','notif'];
+function nav(screen) {
+  NAV.forEach(s => {
+    const el = document.getElementById('screen-' + s);
+    if (el) el.classList.toggle('active', s === screen);
+  });
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.screen === screen));
+  const scroll = document.getElementById('scroll');
+  if (scroll) scroll.scrollTop = 0;
+}
+
+// ─────────── Thème clair / sombre ───────────
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  const tg = document.getElementById('themeToggle');
+  if (tg) tg.checked = (next === 'dark');
+}
+
+// ─────────── Sélecteur de rôle (mock) ───────────
+document.getElementById('roleSeg').addEventListener('click', e => {
+  if (e.target.tagName === 'BUTTON') {
+    e.currentTarget.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+  }
+});
+
+// ─────────── Sélecteur de type (F02) ───────────
+document.getElementById('typePicker').addEventListener('click', e => {
+  const card = e.target.closest('.type-card');
+  if (!card) return;
+  document.querySelectorAll('#typePicker .type-card').forEach(c => c.classList.remove('sel'));
+  card.classList.add('sel');
+});
+
+// ─────────── Filtres (signalements & actions) ───────────
+function bindFilters(id, kind) {
+  document.getElementById(id).addEventListener('click', e => {
+    if (!e.target.classList.contains('filter')) return;
+    e.currentTarget.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+    e.target.classList.add('active');
+    const f = e.target.dataset.f;
+    if (kind === 'reports') {
+      const list = f === 'all' ? REPORTS
+        : f === 'open' ? REPORTS.filter(r => r.status !== 'closed')
+        : f === 'closed' ? REPORTS.filter(r => r.status === 'closed')
+        : REPORTS.filter(r => r.type === f);
+      document.getElementById('all-reports').innerHTML = list.length ? list.map(reportHTML).join('') : '<div class="empty"><span class="em">📭</span>Aucun signalement.</div>';
+    } else {
+      const list = f === 'all' ? ACTIONS
+        : f === 'late' ? ACTIONS.filter(a => a.late)
+        : ACTIONS.filter(a => a.status === f);
+      document.getElementById('all-actions').innerHTML = list.length ? list.map(actionHTML).join('') : '<div class="empty"><span class="em">✅</span>Aucune action.</div>';
+    }
+  });
+}
+bindFilters('reportFilters', 'reports');
+bindFilters('actionFilters', 'actions');
+
+// ─────────── Soumission factice ───────────
+function fakeSubmit() {
+  const btn = event.target; const t = btn.textContent;
+  btn.textContent = 'Envoi…'; btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '✅ Signalement créé — SIG-2026-049';
+    btn.style.background = 'var(--ok)';
+    setTimeout(() => { btn.textContent = t; btn.disabled = false; btn.style.background = ''; nav('liste'); render(); }, 1400);
+  }, 800);
+}
+
+// ─────────── Assistant IA (mock) ───────────
+const AI_REPLIES = [
+  { cat: 'Chute de hauteur', txt: 'Risque identifié : chute depuis une hauteur non protégée.<br><br><b>Conseils :</b><br>1. Vérifier la présence et l’état des garde-corps.<br>2. Contrôler les EPI antichute (harnais, ligne de vie).<br>3. Baliser la zone et interdire l’accès non sécurisé.' },
+  { cat: 'Électrique', txt: 'Risque identifié : contact ou arc électrique.<br><br><b>Conseils :</b><br>1. Consigner l’équipement avant intervention.<br>2. Vérifier l’absence de tension (VAT).<br>3. Utiliser les EPI isolants adaptés.' },
+  { cat: 'Mécanique', txt: 'Risque identifié : écrasement ou happement par un organe en mouvement.<br><br><b>Conseils :</b><br>1. Consigner et cadenasser la machine.<br>2. Vérifier les protecteurs et carters.<br>3. Respecter la procédure de consignation LOTO.' },
+];
+function aiSend() {
+  const input = document.getElementById('aiText');
+  const v = input.value.trim(); if (!v) return;
+  const chat = document.getElementById('chat');
+  chat.insertAdjacentHTML('beforeend', `<div class="msg user">${v.replace(/</g,'<')}</div>`);
+  input.value = '';
+  chat.insertAdjacentHTML('beforeend', `<div class="msg ai"><div class="role">🤖 Analyse en cours…</div></div>`);
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(() => {
+    const last = chat.querySelector('.msg.ai:last-child');
+    const r = AI_REPLIES[Math.floor(Math.random() * AI_REPLIES.length)];
+    last.outerHTML = `<div class="msg ai">
+      <div class="role">🤖 Proposition de catégorie</div>
+      <b>${r.cat}</b>
+      <div style="margin-top:6px">${r.txt}</div>
+      <div class="refs">
+        <div class="ref"><span class="ic">📚</span> Consigne C-${String(Math.floor(Math.random()*200)+10).padStart(3,'0')} — document validé</div>
+        <div class="ref"><span class="ic">⚠️</span> Limites : proposition automatique, à valider par un responsable HSE.</div>
+      </div>
+    </div>`;
+    chat.scrollTop = chat.scrollHeight;
+  }, 700);
+}
+document.getElementById('aiText').addEventListener('keydown', e => { if (e.key === 'Enter') aiSend(); });
+
+// ─────────── Horloge de la barre d'état ───────────
+function tick() {
+  const d = new Date();
+  document.querySelector('.statusbar .time').textContent =
+    String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+// ─────────── Initialisation ───────────
+render(); tick(); setInterval(tick, 30000);
+</script>
+</body>
+</html>
