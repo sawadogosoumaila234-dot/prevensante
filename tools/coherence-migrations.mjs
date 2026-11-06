@@ -5,8 +5,13 @@
 // Aucun accès base : tout est lu dans les fichiers de migration.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const DOSSIER = 'C:/Users/Cabinet_prevent/dev/prevensante/supabase/migrations';
+// Chemin resolu depuis l'emplacement du module : l'outillage doit fonctionner
+// sur n'importe quelle machine et sur une CI, pas seulement sur le poste qui
+// a ecrit le script.
+const RACINE = fileURLToPath(new URL('..', import.meta.url));
+const DOSSIER = join(RACINE, 'supabase', 'migrations');
 const fichiers = readdirSync(DOSSIER).filter((f) => f.endsWith('.sql')).sort();
 const sql = fichiers.map((f) => readFileSync(join(DOSSIER, f), 'utf8')).join('\n');
 

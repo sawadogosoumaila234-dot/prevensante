@@ -3,11 +3,17 @@
 // Chaque instruction est découpée puis parsée ; les erreurs sont listées.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { parseSync, loadModule } = require('pgsql-parser');
-const DOSSIER = 'C:/Users/Cabinet_prevent/dev/prevensante/supabase/migrations';
+
+// Chemin resolu depuis l'emplacement du module : l'outillage doit fonctionner
+// sur n'importe quelle machine et sur une CI, pas seulement sur le poste qui
+// a ecrit le script.
+const RACINE = fileURLToPath(new URL('..', import.meta.url));
+const DOSSIER = join(RACINE, 'supabase', 'migrations');
 
 const TAG_DOLLAR = /^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/;
 
