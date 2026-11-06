@@ -394,6 +394,25 @@ vercel env add VITE_APP_NAME production      # "PrevEnSante"
   projet). Elle n'est déclarée que comme secret Edge Function.
 - Les variables se récupèrent avec `vercel env pull .env.local` ; elles ne se recopient pas à la main.
 
+#### Deux pièges qui cassent un déploiement sans le dire
+
+**Un BOM dans la valeur d'une variable.** Le caractère `U+FEFF` est invisible à l'écran : il peut se
+glisser dans une valeur et être embarqué tel quel dans le bundle. Le build passe, la CI passe, le
+site s'affiche — mais l'application ne parle plus à la base : `new URL()` refuse une URL précédée
+d'un BOM (`Invalid URL`), et le formulaire de connexion affiche « The email address or the
+password is incorrect » **même avec les bons identifiants**, parce qu'aucun appel à l'instance
+n'est jamais parti. Le contrôle après déploiement doit donc vérifier que l'application **joint**
+l'instance, pas seulement qu'elle s'affiche. Un `pipe` de PowerShell vers une commande native
+ajoute un BOM : privilégier `cmd /c "type fichier | vercel env add ..."` avec un fichier écrit
+sans BOM, et relire `vercel env pull` avant de déployer.
+
+**L'auteur du commit.** Vercel compare l'auteur du commit local à l'adresse du compte qui
+déploie. Si elles diffèrent, le déploiement est refusé (« the commit author doesn't have
+permission to create deployments for this project ») et **le déploiement précédent reste en
+ligne** : la correction n'est visible qu'après un redéploiement réussi. Les déploiements
+construits avec `--prebuilt` ne portent pas de métadonnée git et passent donc toujours.
+`git config user.email` doit être l'adresse vérifiée du compte Vercel.
+
 **Vérification post-déploiement** : ouvrir l'URL de production, se connecter, et contrôler dans le
 bundle servi qu'aucune occurrence de `service_role` n'est présente (voir § 6.4).
 
