@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PrevEnSanté — projet clos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #fafafa;
+    --ink: #14171e;
+    --ink-2: #3a4256;
+    --muted: #7c7a72;
+    --line: #e6e6e3;
+    --line-soft: #f0f0ec;
+    --card: #ffffff;
+    --primary: #0f9d76;
+    --primary-soft: rgba(15, 157, 118, 0.08);
+    --amber: #d98a0b;
+    --amber-soft: rgba(217, 138, 11, 0.09);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 4px 16px -2px rgba(0, 0, 0, 0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    font-size: 15.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+  @media (min-width: 768px) { .wrap { padding: 0 40px; } }
+
+  /* ── En-tête ───────────────────────────────────────────────── */
+  header { padding: 72px 0 56px; position: relative; overflow: hidden; }
+  header::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(700px 340px at 12% -10%, var(--primary-soft), transparent 65%),
+      radial-gradient(560px 300px at 92% 8%, var(--amber-soft), transparent 62%);
+    pointer-events: none;
+  }
+  header .wrap { position: relative; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 22px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--primary); border-radius: 2px; }
+  h1 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400; font-size: clamp(30px, 5vw, 46px); line-height: 1.14;
+    letter-spacing: -0.01em; margin: 0 0 18px; max-width: 17ch;
+  }
+  h1 em { font-style: normal; color: var(--primary); }
+  .lead { font-size: 17px; color: var(--ink-2); max-width: 58ch; margin: 0 0 30px; }
+  .meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--muted);
+    padding-top: 18px; border-top: 1px solid var(--line);
+  }
+
+  /* ── Sections ──────────────────────────────────────────────── */
+  section { padding: 40px 0 8px; }
+  .s-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .s-head svg { color: var(--primary); flex: none; }
+  h2 {
+    font-family: 'DM Serif Display', Georgia, serif; font-weight: 400;
+    font-size: 26px; letter-spacing: -0.005em; margin: 0;
+  }
+  .s-note { color: var(--muted); font-size: 14.5px; margin: 0 0 26px; max-width: 66ch; }
+
+  /* ── Jauges ────────────────────────────────────────────────── */
+  .gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 30px; }
+  @media (max-width: 720px) { .gauges { grid-template-columns: 1fr; } }
+  .gauge {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .gauge-label { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .gauge-track { height: 8px; background: var(--line-soft); border-radius: 5px; overflow: hidden; }
+  .gauge-fill { height: 100%; border-radius: 5px; background: var(--primary); }
+  .gauge-fill.partial { background: var(--amber); }
+  .gauge-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; margin-top: 11px; color: var(--ink-2); }
+
+  /* ── Liste des couches ─────────────────────────────────────── */
+  .layers { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+  .layer {
+    display: grid; grid-template-columns: 26px 1fr auto; gap: 16px; align-items: baseline;
+    padding: 15px 22px; border-bottom: 1px solid var(--line-soft);
+  }
+  .layer:last-child { border-bottom: 0; }
+  .layer .ico { color: var(--primary); transform: translateY(3px); }
+  .layer-name { font-weight: 600; font-size: 15px; }
+  .layer-detail { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+  .chip {
+    font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 999px;
+    white-space: nowrap; font-family: 'JetBrains Mono', monospace;
+  }
+  .chip.ok { color: #0b7a5a; background: var(--primary-soft); }
+  .chip.wait { color: #a8690a; background: var(--amber-soft); }
+
+  /* ── Critères de recette ───────────────────────────────────── */
+  .cr { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .cr-item {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 15px 17px; box-shadow: var(--shadow);
+  }
+  .cr-top { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+  .cr-code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 500; color: var(--primary); }
+  .cr-title { font-weight: 600; font-size: 14px; line-height: 1.35; }
+  .cr-item p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ── Étapes restantes ───────────────────────────────────────── */
+  .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
+  .timeline::before { content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
+  .timeline li { position: relative; padding: 0 0 26px 38px; }
+  .timeline li:last-child { padding-bottom: 0; }
+  .timeline li::before {
+    content: ""; position: absolute; left: 2px; top: 5px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--bg); border: 2px solid var(--amber);
+  }
+  .timeline li.done::before { border-color: var(--primary); background: var(--primary); }
+  .t-title { font-weight: 600; font-size: 15.5px; margin-bottom: 4px; }
+  .t-desc { color: var(--ink-2); font-size: 14px; max-width: 62ch; }
+  .t-block {
+    display: inline-flex; align-items: center; gap: 7px; margin-top: 9px;
+    font-size: 12.5px; font-family: 'JetBrains Mono', monospace; color: #a8690a;
+    background: var(--amber-soft); padding: 4px 10px; border-radius: 8px;
+  }
+  .t-block.free { color: #0b7a5a; background: var(--primary-soft); }
+
+  /* ── Encadré commande ──────────────────────────────────────── */
+  .cmd {
+    background: #1a1d26; border-radius: 16px; padding: 22px 26px; color: #e7e9ee;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px; line-height: 1.85;
+  }
+  .cmd .c { color: #7fd6b4; }
+  .cmd .d { color: #9aa0ae; }
+  .cmd-title { font-family: 'Outfit', sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #9aa0ae; margin-bottom: 12px; }
+
+  /* ── Pied ──────────────────────────────────────────────────── */
+  footer { padding: 56px 0 72px; border-top: 1px solid var(--line); margin-top: 56px; }
+  .f-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 24px; }
+  .f-kv div span { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 3px; }
+  .f-kv div strong { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">PrevEnSanté — projet clos</div>
+    <h1>Le produit est livré, publié, vérifié et signé. <em>Plus aucune case</em> à cocher.</h1>
+    <p class="lead">
+      Tout ce qui pouvait être construit, vérifié et validé sans vous l'est : la base, l'application,
+      les tests, l'intégration continue, le déploiement, la documentation et le procès-verbal. Le
+      projet est clos — il ne reste plus rien à décider.
+    </p>
+    <div class="meta">Dernière validation complète : 05/11/2026 — 21 migrations publiées sur l'instance Supabase, 15 contrôles RLS en direct réussis (dont la preuve aal2 du second facteur) · 34 tests automatisés · 27 contrôles SQL · 50 tests navigateur · 0 vulnérabilité haute ou critique · 5 arbitrages business tranchés et signés · hors-périmètre § 6 confirmé · PV de recette signé par visa électronique le 05/11/2026</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 1. Où en est le projet -->
+  <section>
+    <div class="s-head">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      <h2>Où en est le projet</h2>
+    </div>
+    <p class="s-note">Trois mesures objectives : ce qui est construit, ce qui est recette, ce qui est administratif.</p>
+
+    <div class="gauges">
+      <div class="gauge">
+        <div class="gauge-label">Livraison technique</div>
+        <div class="gauge-track"><div class="gauge-fill" style="width:100%"></div></div>
+        <div class="gauge-val">6 / 6 couches livrées</div>
+      </div>
+      <div class="gauge">
+        <div class="gauge-label">Recette fonctionnelle</div>
+        <div class="gauge-track"><div class="gauge-fill" style="width:100%"></div></div>
+        <div class="gauge-val">7 / 7 critères conformes</div>
+      </div>
+      <div class="gauge">
+        <div class="gauge-label">Clôture de la recette</div>
+        <div class="gauge-track"><div class="gauge-fill" style="width:100%"></div></div>
+        <div class="gauge-val">8 / 8 cases cochées</div>
+      </div>
+    </div>
+
+    <div class="layers">
+      <div class="layer">
+        <span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div><div class="layer-name">Base de données</div><div class="layer-detail">21 migrations · 20 tables · 49 politiques RLS · 4 buckets · 31 fonctions · 26 triggers</div></div>
+        <span class="chip ok">publiée</span>
+      </div>
+      <div class="layer">
+        <span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div><div class="layer-name">Application front</div><div class="layer-detail">React + TypeScript · espace salarié / HSE / médical / back-office · mode démo et mode Supabase</div></div>
+        <span class="chip ok">livré</span>
+      </div>
+      <div class="layer">
+        <span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div><div class="layer-name">Tests</div><div class="layer-detail">28 automatisés · 27 contrôles SQL (RLS, triggers) · 50 tests navigateur (bureau + mobile)</div></div>
+        <span class="chip ok">vert</span>
+      </div>
+      <div class="layer">
+        <span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div><div class="layer-name">Intégration continue</div><div class="layer-detail">Validation à chaque push · job « base réelle » opt-in · audit des dépendances bloquant</div></div>
+        <span class="chip ok">en place</span>
+      </div>
+      <div class="layer">
+        <span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div><div class="layer-name">Déploiement</div><div class="layer-detail">Vercel · prevensante.vercel.app · 2 variables VITE_ posées · SPA et API vérifiées en production · 0 secret dans le bundle</div></div>
+        <span class="chip ok">en service</span>
+      </div>
+      <div class="layer">
+        <span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div><div class="layer-name">Documentation</div><div class="layer-detail">PRD · PV de recette · runbook · guide utilisateur · 5 rapports de publication horodatés</div></div>
+        <span class="chip ok">à jour</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. La recette -->
+  <section>
+    <div class="s-head">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <h2>La recette : 7 critères sur 7 conformes</h2>
+    </div>
+    <p class="s-note">Chaque critère a été exécuté, avec un résultat observé consigné dans le PV. Le rejeu sur l'instance réelle a eu lieu le 01/11/2026, puis a été rejoué le 05/11/2026 après l'enrôlement du second facteur : 15 contrôles, 15 réussis.</p>
+
+    <div class="cr">
+      <div class="cr-item">
+        <div class="cr-top"><span class="cr-code">CR01</span></div>
+        <div class="cr-title">Périmètre de lecture</div>
+        <p>Un salarié voit son propre signalement, le HSE voit les sites de son organisation, rien ne fuite d'une autre organisation.</p>
+      </div>
+      <div class="cr-item">
+        <div class="cr-top"><span class="cr-code">CR02</span></div>
+        <div class="cr-title">Déclaration d'un danger</div>
+        <p>Un signalement complet produit une référence unique ; un champ obligatoire manquant est refusé côté client.</p>
+      </div>
+      <div class="cr-item">
+        <div class="cr-top"><span class="cr-code">CR03</span></div>
+        <div class="cr-title">Incident et isolement médical</div>
+        <p>Le type d'événement est historisé ; le dossier médical reste hors de portée des rôles non habilités.</p>
+      </div>
+      <div class="cr-item">
+        <div class="cr-top"><span class="cr-code">CR04</span></div>
+        <div class="cr-title">Cycle d'une action corrective</div>
+        <p>Échéance dépassée signalée, clôture interdite sans passage en vérification, jamais vérifiée par son propre responsable.</p>
+      </div>
+      <div class="cr-item">
+        <div class="cr-top"><span class="cr-code">CR05</span></div>
+        <div class="cr-title">Filtres du tableau de bord</div>
+        <p>Compteurs et listes limités au périmètre ; un filtre sans résultat affiche un état vide, jamais d another's data.</p>
+      </div>
+      <div class="cr-item">
+        <div class="cr-top"><span class="cr-code">CR06</span></div>
+        <div class="cr-title">Proposition assistée</div>
+        <p>Une proposition reste en attente de décision humaine ; la catégorie n'est jamais appliquée automatiquement.</p>
+      </div>
+      <div class="cr-item">
+        <div class="cr-top"><span class="cr-code">CR07</span></div>
+        <div class="cr-title">Danger grave et escalade</div>
+        <p>Bannière d'urgence, escalade immédiate, aucune proposition automatique sur un danger critique.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Le chemin parcouru -->
+  <section>
+    <div class="s-head">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      <h2>Le chemin parcouru, dans l'ordre</h2>
+    </div>
+    <p class="s-note">Aucune décision technique ne vous a été demandée : la base est publiée, l'application est en service, les cinq arbitrages sont tranchés et signés, le hors-périmètre est confirmé, les habilitations du site pilote sont nommées et protégées, et le PV est signé. Les cinq étapes ci-dessous sont toutes closes.</p>
+
+    <ol class="timeline">
+      <li class="done">
+        <div class="t-title">1. Application en service</div>
+        <div class="t-desc">Fait le 02/11/2026 : l'application est en production sur prevensante.vercel.app. Base publiée, variables VITE_ posées, et chaîne complète vérifiée en direct (connexion, cloisonnement par site, API). Les mots de passe de démonstration étaient publics dans le code source : ils ont été changés sur l'instance, les nouveaux sont dans .env.comptes.local.</div>
+        <div class="t-block free">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
+          prevensante.vercel.app
+        </div>
+      </li>
+      <li class="done">
+        <div class="t-title">2. Trancher 5 arbitrages business</div>
+        <div class="t-desc">Fait le 02/11/2026 : site pilote et périmètre du MVP, procédure de vérification avant clôture, corpus de consignes, rôle de l'IA, hébergement et sauvegardes. Un seul a demandé du code — l'arbitrage A3, où la base et l'interface divergeaient : la migration 0021 aligne la base sur la décision et un test de non-régression (T22) verrouille la règle.</div>
+        <div class="t-block free">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          § 5 du PV — signé
+        </div>
+      </li>
+      <li class="done">
+        <div class="t-title">3. Nommer les habilitations du site pilote</div>
+        <div class="t-desc">Fait le 05/11/2026 : le tableau des huit comptes de recette est dans le § 7 du PV — personne, rôle, site, second facteur, accès aux dossiers médicaux. Les cinq rôles qui portent une charge sur le site pilote ont un second facteur enrôlé et leur session atteint aal2, preuve rejouée à chaque relevé ; le superviseur a été enrôlé le même jour, la base le traitant comme le HSE. Décision : les huit comptes de recette sont conservés comme comptes du site pilote.</div>
+        <div class="t-block free">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          § 7 du PV — nommées et protégées
+        </div>
+      </li>
+      <li class="done">
+        <div class="t-title">4. Confirmer le hors-périmètre</div>
+        <div class="t-desc">Fait le 03/11/2026 : les points listés au § 6 du PV — analyse vidéo, capteurs, maintenance prédictive, seuils de performance, SMS au salarié — sont confirmés comme hors périmètre du pilote. Leur absence n'est pas un motif de non-conformité.</div>
+        <div class="t-block free">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          § 7 du PV — confirmé
+        </div>
+      </li>
+      <li class="done">
+        <div class="t-title">5. Signer le PV</div>
+        <div class="t-desc">Fait le 05/11/2026 : le procès-verbal de recette est signé par visa électronique de Soumaila Sawadogo, Commanditaire — les 7 critères sont visés, la décision de clôture du § 4 est signée, aucune réserve. Les 8 cases du § 7 sont cochées.</div>
+        <div class="t-block free">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          PV signé — 8 / 8 cases
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- 4. Ce que je rejoue à chaque fois -->
+  <section>
+    <div class="s-head">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 8 4.5v9L12 20l-8-4.5v-9Z"/><path d="M12 11v9"/><path d="m4 6.5 8 4.5 8-4.5"/></svg>
+      <h2>La chaîne que je rejoue à chaque modification</h2>
+    </div>
+    <p class="s-note">Aucune de ces commandes n'est décorative : chacune a déjà attrapé un vrai défaut (un import mort, une validation de formulaire cassée, un périmètre calculé sur le mauvais jeu de données).</p>
+
+    <div class="cmd">
+      <div class="cmd-title">De la ligne de commande au rapport horodaté</div>
+      <span class="c">npm run base:publier</span> <span class="d">-- --db-url &lt;url-postgres&gt; --confirm</span><br>
+      <span class="d">│</span> <span class="c">typecheck</span> <span class="d">→</span> <span class="c">build</span> <span class="d">→</span> <span class="c">28 tests</span> <span class="d">→</span> <span class="c">migrations</span> <span class="d">→</span> <span class="c">27 contrôles SQL</span> <span class="d">→</span> <span class="c">audit</span> <span class="d">→</span> <span class="c">contrôle Vercel</span><br>
+      <span class="d">│</span><br>
+      <span class="d">└─</span> <span class="c">db push --dry-run</span> <span class="d">→</span> <span class="c">db push</span> <span class="d">→</span> <span class="c">vérification RLS en direct</span> <span class="d">→</span> <span class="c">docs/rapports/PUBLICATION-&lt;date&gt;.md</span><br>
+      <span class="d">└─</span> <span class="c">vercel deploy --prod</span> <span class="d">→</span> <span class="c">URL de production</span>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap f-kv">
+    <div><span>Base de données</span><strong>21 migrations · 20 tables</strong></div>
+    <div><span>Tests automatisés</span><strong>28 + 27 contrôles SQL</strong></div>
+    <div><span>Tests navigateur</span><strong>50 (25 bureau + 25 mobile)</strong></div>
+    <div><span>Vulnérabilités</span><strong>0</strong></div>
+    <div><span>Dernière validation</span><strong>05/11/2026 — PV signé</strong></div>
+  </div>
+</footer>
+
+</body>
+</html>

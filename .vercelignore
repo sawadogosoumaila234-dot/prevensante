@@ -7,18 +7,48 @@
 # Les regles de reecriture (vercel.json) s'appliquent APRES la verification du
 # systeme de fichiers : un rewrite ne suffit donc pas a proteger un fichier
 # existant. La seule protection fiable est de ne pas l'envoyer du tout.
+#
+# ── ATTENTION A L'ANCRE ──────────────────────────────────────────────────────
+# En syntaxe gitignore (donc aussi pour `.vercelignore`), un motif SANS « / » initial
+# correspond a n'importe quel niveau du depot. Le motif `supabase/` aurait donc
+# exclu aussi `web/src/lib/supabase/` — c'est-a-dire le client Supabase du front —
+# et le build Vercel echouait avec :
+#     error TS2307: Cannot find module './supabase/client'
+#
+# Tous les motifs qui ne doivent viser qu'un emplacement precis sont donc ancres
+# par un « / » initial. Seuls les motifs de secrets et d'artefacts restent
+# volontairement larges.
 
-# Documents internes et propriete intellectuelle
-docs/
-README.md
-CONTEXTE.md
+# Documents internes et propriete intellectuelle (racine du depot uniquement)
+/docs/
+/README.md
+/CONTEXTE.md
+
+# Base de donnees et outillage : SQL versionne, tests SQL, scripts de
+# validation. Aucun de ces fichiers n'est necessaire au build Vercel, et les
+# envoyer exposerait le schema et les jeux de donnees de recette.
+/supabase/
+/tools/
 
 # Tests et outillage local
-test/
+/test/
+/web/e2e/
+/web/playwright.config.ts
 
-# Configuration locale et meta-fichiers de depot
+# Sorties de build et artefacts de test
+/web/dist/
+/web/test-results/
+/web/playwright-report/
+*.tsbuildinfo
+
+# Secrets : motifs larges, ils doivent attraper n'importe ou
 .env
 .env.*
 .vercel/
-.gitignore
-.gitattributes
+
+# Meta-fichiers de depot
+/.gitignore
+/.gitattributes
+
+# Definition des pipelines : utile pour la CI, inutile pour servir le site
+/.github/

@@ -87,23 +87,35 @@ for (const m of sansCommentaires.matchAll(
   });
 }
 
+// ── Tables fournies par Supabase (auth.*, storage.*) ─────────────
+// Elles ne sont pas créées par les migrations : le validateur doit
+// seulement vérifier qu'elles sont bien référencées, pas qu'elles existent
+// dans le DDL versionné.
+const TABLES_SUPABASE = new Set([
+  'auth.users',
+  'storage.buckets',
+  'storage.objects',
+]);
+const estTableConnue = (t) =>
+  tablesCreees.has(t) || TABLES_SUPABASE.has(t);
+
 // ── Contrôles ────────────────────────────────────────────────────
 const problemes = [];
 
 for (const p of politiques) {
-  if (!tablesCreees.has(p.table)) {
+  if (!estTableConnue(p.table)) {
     problemes.push(`POLITIQUE ${p.nom} : table ${p.table} introuvable`);
   }
   // Tables référencées dans la condition
   for (const m of p.using.matchAll(/\b(?:from|join)\s+([a-z_]+)\.([a-z_]+)/gi)) {
     const t = `${m[1].toLowerCase()}.${m[2].toLowerCase()}`;
-    if (!tablesCreees.has(t)) {
+    if (!estTableConnue(t)) {
       problemes.push(`POLITIQUE ${p.nom} : référence à ${t} qui n'existe pas`);
     }
   }
   for (const m of p.check.matchAll(/\b(?:from|join)\s+([a-z_]+)\.([a-z_]+)/gi)) {
     const t = `${m[1].toLowerCase()}.${m[2].toLowerCase()}`;
-    if (!tablesCreees.has(t)) {
+    if (!estTableConnue(t)) {
       problemes.push(`POLITIQUE ${p.nom} (with check) : référence à ${t} qui n'existe pas`);
     }
   }
@@ -124,7 +136,7 @@ for (const m of sansCommentaires.matchAll(
   /create\s+index\s+(?:if\s+not\s+exists\s+)?[a-z_][a-z0-9_]*\s+on\s+([a-z_]+)\.([a-z_]+)/gi,
 )) {
   const t = `${m[1].toLowerCase()}.${m[2].toLowerCase()}`;
-  if (!tablesCreees.has(t)) problemes.push(`INDEX sur ${t} : table inexistante`);
+  if (!estTableConnue(t)) problemes.push(`INDEX sur ${t} : table inexistante`);
 }
 
 // ── Triggers sur tables inexistantes ─────────────────────────────
@@ -132,7 +144,7 @@ for (const m of sansCommentaires.matchAll(
   /create\s+trigger\s+[a-z_][a-z0-9_]*\s+(?:before|after)\s+\w+\s+on\s+([a-z_]+)\.([a-z_]+)/gi,
 )) {
   const t = `${m[1].toLowerCase()}.${m[2].toLowerCase()}`;
-  if (!tablesCreees.has(t)) problemes.push(`TRIGGER sur ${t} : table inexistante`);
+  if (!estTableConnue(t)) problemes.push(`TRIGGER sur ${t} : table inexistante`);
 }
 
 // ── Affichage ────────────────────────────────────────────────────

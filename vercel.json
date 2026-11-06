@@ -5,6 +5,7 @@
   "outputDirectory": "web/dist",
   "installCommand": "npm install && npm --prefix web install",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/index" }
+    { "source": "/api/:path*", "destination": "/api/index" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

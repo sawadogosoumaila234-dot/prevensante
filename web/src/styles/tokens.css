@@ -1,0 +1,90 @@
+/* =============================================================================
+   PrevEnSanté — tokens de design (section 13 de la spécification)
+   16 couleurs exactes, typographie, espacements, rayons, ombres.
+   ========================================================================== */
+
+:root {
+  /* ── Couleurs (tokens exacts, section 13.1) ───────────────────────────── */
+  --color-primary: #14425C;
+  --color-primary-dark: #0c2c3e;
+  --color-primary-light: #e3edf3;
+  --color-accent: #f2a007;
+  --color-accent-light: #fef3dc;
+  --color-surface: #f3f6f7;
+  --color-card: #ffffff;
+  --color-ink: #111c22;
+  --color-ink-muted: #48585f;
+  --color-border: #d2dce1;
+  --color-success: #1f7a4d;
+  --color-warning: #b26b00;
+  --color-danger: #b3261e;
+  --color-info: #1e63c4;
+  --color-critical-band: #7f1d1d;
+  --color-hivis: #ffd400;
+
+  /* ── Fonds doux derivation (pastilles) ───────────────────────────────── */
+  --tint-neutral: #f3f6f7;
+  --tint-info: #e8f0fc;
+  --tint-success: #e6f3ec;
+  --tint-warning: #fef3dc;
+  --tint-danger: #fbeae9;
+  --tint-critical: #f5e0e0;
+
+  /* ── Variantes de texte foncees pour respecter AA (4,5:1) ───────────── */
+  --text-on-tint-neutral: #48585f;
+  --text-on-tint-info: #1e63c4;
+  --text-on-tint-success: #1f7a4d;
+  --text-on-tint-warning: #8a5200;
+  --text-on-tint-danger: #b3261e;
+  --text-on-tint-critical: #7f1d1d;
+  --text-on-accent: #111c22;
+  --text-on-primary: #ffffff;
+  --text-on-critical-band: #ffffff;
+
+  /* ── Typographie (section 13.2) ──────────────────────────────────────── */
+  --font-sans: 'Inter', 'Inter var', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Barlow Semi Condensed', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --fs-12: 0.75rem;
+  --fs-14: 0.875rem;
+  --fs-16: 1rem;
+  --fs-18: 1.125rem;
+  --fs-22: 1.375rem;
+  --fs-28: 1.75rem;
+  --lh-body: 1.5;
+  --fw-title: 650;
+
+  /* ── Espacements (multiples de 4) et rayons (section 13.4) ─────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --radius-badge: 6px;
+  --radius-card: 10px;
+  --radius-panel: 14px;
+  --radius-pill: 9999px;
+
+  --shadow-1: 0 1px 2px rgba(17, 28, 34, 0.08);
+  --shadow-2: 0 8px 24px rgba(17, 28, 34, 0.12);
+
+  --header-h: 60px;
+  --nav-h: 68px;
+  --sidebar-w: 248px;
+  --tap-min: 44px;
+}
+
+/* Respect du mouvement reduit (accessibilite 11.7). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

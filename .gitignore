@@ -4,6 +4,10 @@ dist/
 coverage/
 *.tsbuildinfo
 
+# Artefacts de test Playwright
+web/test-results/
+web/playwright-report/
+
 # Secrets — NE JAMAIS committer
 .env
 .env.*

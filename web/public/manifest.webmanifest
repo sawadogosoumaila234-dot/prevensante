@@ -1,16 +1,20 @@
 {
-  "name": "PrevEnSanté — Prévention des risques professionnels",
+  "name": "PrevEnSanté — Occupational risk prevention",
   "short_name": "PrevEnSanté",
-  "description": "Signalement des dangers, suivi des accidents et des actions correctives pour les mines, cimenteries, usines et chantiers.",
+  "description": "Report hazards, follow accidents and corrective actions for mines, cement plants, factories and construction sites.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1a237e",
-  "theme_color": "#1a237e",
-  "lang": "fr",
-  "categories": ["business", "productivity"],
+  "background_color": "#f3f6f7",
+  "theme_color": "#14425c",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
-    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

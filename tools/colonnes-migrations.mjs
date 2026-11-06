@@ -37,7 +37,10 @@ for (const m of sans.matchAll(
   col(`${m[1].toLowerCase()}.${m[2].toLowerCase()}`, m[3]);
 }
 
-const tablesCreees = new Set(colonnes.keys());
+// Tables fournies par Supabase (auth.*, storage.*) : hors DDL versionne,
+// leurs colonnes ne sont pas verifiables ici.
+const TABLES_SUPABASE = new Set(['auth.users', 'storage.buckets', 'storage.objects']);
+const tablesCreees = new Set([...colonnes.keys(), ...TABLES_SUPABASE]);
 
 function extrairePolitiques(source) {
   const resultats = [];
@@ -94,6 +97,7 @@ for (const p of politiques) {
     problemes.push(`POLITIQUE ${p.nom} : table ${p.table} inexistante`);
     continue;
   }
+  if (TABLES_SUPABASE.has(p.table)) continue;
   const colonnesTable = colonnes.get(p.table);
   const alias = aliasDe(p.cond.join(' '));
 

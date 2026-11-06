@@ -2,7 +2,7 @@
  * Routeur de l'application, en API Web standard (Request -> Response).
  *
  * Volontairement sans dépendance : ce module tourne aussi bien dans le serveur
- * Node local (`src/index.js`) que dans une fonction serverless Vercel
+ * Node local (`server/index.js`) que dans une fonction serverless Vercel
  * (`api/index.js`). Aucun framework n'est imposé.
  */
 

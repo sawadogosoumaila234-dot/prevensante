@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "node --watch server/index.js",
     "start": "node server/index.js",
-    "test": "node --test",
+    "test": "node --import ./test/register-ts.mjs --test",
     "dev:web": "npm --prefix web run dev",
     "build:web": "npm --prefix web run build",
     "preview:web": "npm --prefix web run preview",
@@ -18,7 +18,9 @@
     "migrations:run": "node tools/executer-migrations.mjs",
     "migrations:coherence": "node tools/coherence-migrations.mjs",
     "migrations:colonnes": "node tools/colonnes-migrations.mjs",
-    "db:test": "node tools/test-fonctionnel.mjs"
+    "db:test": "node tools/test-fonctionnel.mjs",
+    "deploiement:verifier": "node tools/verifier-deploiement.mjs",
+    "base:publier": "node tools/publier-base.mjs"
   },
   "keywords": [],
   "license": "UNLICENSED",

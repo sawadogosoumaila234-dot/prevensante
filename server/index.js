@@ -1,7 +1,7 @@
 /**
  * Adaptateur Node HTTP -> API Web standard, et serveur de développement local.
  *
- * Le routeur (`src/app.js`) ne connaît que `Request`/`Response`. Ce fichier fait
+ * Le routeur (`server/app.js`) ne connaît que `Request`/`Response`. Ce fichier fait
  * la traduction pour un serveur `node:http` classique, afin de développer et
  * tester en local exactement le code déployé sur Vercel (`api/index.js`).
  */

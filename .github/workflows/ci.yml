@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validation:
+    name: Typage, SQL et recette E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: Installer les dépendances
+        run: |
+          npm ci
+          npm --prefix web ci
+
+      - name: Typage et build du front
+        run: |
+          npm --prefix web run typecheck
+          npm --prefix web run build
+
+      # « vercel build » n'est pas exécutable partout (il lance cmd.exe sous
+      # Windows). Le contrôleur rejoue, sans réseau, ce que Vercel examinerait :
+      # fichiers transmis, secrets, imports de la fonction, repli SPA.
+      - name: Contrôle de la configuration de déploiement
+        run: npm run deploiement:verifier
+
+      # Une dépendance vulnérable en production (zod < 4.6.6, par exemple)
+      # doit casser la chaîne, pas être découverte au moment du déploiement.
+      - name: Audit des dépendances
+        run: |
+          npm audit --audit-level=high
+          npm --prefix web audit --audit-level=high
+
+      - name: Tests du routeur API
+        run: npm test
+
+      # Les migrations et les tests RLS tournent sans conteneur ni instance
+      # distante : PGlite execute un vrai PostgreSQL en WebAssembly.
+      - name: Validation SQL (syntaxe, cohérence, RLS)
+        run: |
+          npm run migrations:parse
+          npm run migrations:coherence
+          npm run migrations:colonnes
+          npm run migrations:run
+          npm run db:test
+
+      - name: Installer Chromium pour Playwright
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      # La recette s'exécute contre le build de production, pas contre le
+      # serveur de développement : c'est la cible de la recette.
+      - name: Recette E2E (bureau + mobile)
+        working-directory: web
+        run: npx playwright test --reporter=list
+
+      - name: Publier le rapport de recette
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-recette
+          path: |
+            web/playwright-report
+            web/test-results
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # Rejeu de la meme recette contre l'instance Supabase de recette, ou la
+  # RLS est appliquee par PostgreSQL et non emulee dans le code.
+  #
+  # Le job est opt-in : il ne demarre que si la variable de depot
+  # ENABLE_BASE_REELLE vaut "true" (Settings > Secrets and variables > Actions
+  # > Variables). Les deux secrets attendus sont VITE_SUPABASE_URL et
+  # VITE_SUPABASE_ANON_KEY (cle publique, deja exposee au navigateur).
+  recette-base-reelle:
+    name: Recette E2E sur la base Supabase de recette
+    if: ${{ vars.ENABLE_BASE_REELLE == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: Installer les dépendances
+        run: |
+          npm ci
+          npm --prefix web ci
+
+      - name: Construire le front avec la configuration Supabase
+        run: |
+          npm --prefix web run typecheck
+          npm --prefix web run build
+
+      - name: Installer Chromium pour Playwright
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - name: Recette E2E sur la base réelle
+        working-directory: web
+        run: npx playwright test --reporter=list
+
+      - name: Publier le rapport de recette
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-recette-base-reelle
+          path: |
+            web/playwright-report
+            web/test-results
+          retention-days: 14
+          if-no-files-found: ignore

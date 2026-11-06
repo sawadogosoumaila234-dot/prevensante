@@ -1,271 +1,261 @@
-// Test fonctionnel du schéma PrevEnSanté dans PGlite (PostgreSQL en WASM).
-//  1. RLS : visibilité par rôle ;
-//  2. trigger de référence : SIG-YYYY-NNNN auto-généré ;
-//  3. trigger de clôture : un non-HSE ne peut pas clôturer une action ;
-//  4. trigger de protection du rôle ;
-//  5. séparation du schéma medical.
-import { readFileSync, readdirSync } from 'node:fs';
+﻿// Test fonctionnel du schéma PrevEnSanté dans PGlite (PostgreSQL en WASM).
+//
+// C'est le pendant SQL de la suite E2E navigateur (`web/e2e`) : les deux
+// vérifient la même règle d'accès aux données, l'un côté base, l'un côté IHM.
+//
+//   1. application des migrations versionnées (`supabase/migrations`) ;
+//   2. attribution des droits « Supabase-like » aux rôles anon / authenticated ;
+//   3. exécution de `supabase/tests/rls.sql` — RLS par rôle, déclencheurs de
+//      garde-fou, isolement strict du schéma medical ;
+//   4. contrôles complémentaires exigés par le PV de recette mais absents de
+//      `rls.sql` : format de la référence, refus serveur d'une description
+//      vide (23514), passage obligatoire par « to_verify », interdiction de
+//      vérifier sa propre action.
+//
+// Aucun conteneur, aucune instance Supabase : tout tourne en local.
+//
+// Sortie : 0 si l'ensemble des contrôles passe, 1 sinon.
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createRequire } from 'node:module';
 
-const require = createRequire(import.meta.url);
-const { PGlite } = require('@electric-sql/pglite');
-const { vector } = require('@electric-sql/pglite-pgvector');
-const { postgis } = require('@electric-sql/pglite-postgis');
-const { pgcrypto } = require('@electric-sql/pglite/contrib/pgcrypto');
-const { pg_trgm } = require('@electric-sql/pglite/contrib/pg_trgm');
+import {
+  demarrerPGlite,
+  appliquerMigrations,
+  accorderDroits,
+  decouper,
+  DOSSIER_TESTS,
+} from './pglite-prelude.mjs';
 
-const DOSSIER = 'C:/Users/Cabinet_prevent/dev/prevensante/supabase/migrations';
+// ── Identifiants du jeu de démonstration (supabase/migrations/0016_seed.sql) ──
+const HSE = 'a0000000-0000-4000-8000-000000000001';
+const SALARIE_A = 'a0000000-0000-4000-8000-000000000004';
+const ENCADREMENT = 'a0000000-0000-4000-8000-000000000006';
+const SITE_A = '22222222-2222-4222-8222-222222222222';
+const ZONE_A = '33333333-3333-4333-8333-333333333331';
+const ACTION_ENCOURS = 'bbbbbbbb-0000-4000-8000-000000000001';
+const ACTION_A_VERIFIER = 'bbbbbbbb-0000-4000-8000-000000000003';
 
-function decouper(sql) {
-  const s = sql.replace(/--[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-  const out = [];
-  let cur = '', ch = false, tag = null;
-  const TAG = /^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/;
-  for (let i = 0; i < s.length; i++) {
-    const c = s[i], reste = s.slice(i);
-    if (!ch && !tag) {
-      const m = reste.match(TAG);
-      if (m) { tag = m[0]; cur += tag; i += tag.length - 1; continue; }
-      if (c === "'") { ch = true; cur += c; continue; }
-      if (c === ';') { if (cur.trim()) out.push(cur.trim()); cur = ''; continue; }
-      cur += c; continue;
+const db = await demarrerPGlite({ pgtap: false });
+
+// ── 1. Migrations ─────────────────────────────────────────────────────────────
+console.log('=== 1. Application des migrations ===');
+const migrations = await appliquerMigrations(db, {
+  onInstruction: ({ type, fichier, n }) => {
+    if (type === 'ignore') {
+      console.log(`  [ignore] ${fichier} #${n} — extension absente de PGlite`);
     }
-    if (ch) { cur += c; if (c === "'") { if (s[i + 1] === "'") { cur += "'"; i++; } else ch = false; } continue; }
-    if (reste.startsWith(tag)) { cur += tag; i += tag.length - 1; tag = null; continue; }
-    cur += c;
+  },
+});
+console.log(
+  `  ${migrations.ok} instruction(s) appliquee(s), ${migrations.echecs.length} echec(s), ` +
+    `${migrations.ignorees.length} extension(s) ignoree(s)`,
+);
+if (migrations.echecs.length > 0) {
+  for (const e of migrations.echecs) {
+    console.error(`  [ECHEC] ${e.fichier} #${e.n} : ${e.msg}`);
   }
-  if (cur.trim()) out.push(cur.trim());
-  return out;
+  process.exit(1);
 }
 
-const db = await PGlite.create({ extensions: { vector, postgis, pgcrypto, pg_trgm } });
+// ── 2. Droits « Supabase-like » ───────────────────────────────────────────────
+console.log('\n=== 2. Droits des roles ===');
+await accorderDroits(db);
+console.log('  anon / authenticated / service_role : droits accordes sur public.');
 
-await db.exec(`
-  create schema if not exists auth;
-  create table if not exists auth.users (
-    id uuid primary key default gen_random_uuid(),
-    email text unique,
-    raw_user_meta_data jsonb default '{}'::jsonb
-  );
-  create or replace function auth.uid() returns uuid
-    language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-  create role authenticated nologin;
-  create role anon nologin;
-  create role service_role nologin bypassrls;
-  grant usage on schema public to authenticated, anon, service_role;
-`);
+// ── 3. Suite RLS de reference ─────────────────────────────────────────────────
+console.log('\n=== 3. supabase/tests/rls.sql ===');
+const fichierRls = join(DOSSIER_TESTS, 'rls.sql');
+const instructions = decouper(readFileSync(fichierRls, 'utf8'));
+console.log(`  ${instructions.length} instruction(s) a executer`);
 
-for (const f of readdirSync(DOSSIER).filter((x) => x.endsWith('.sql')).sort()) {
-  for (const instr of decouper(readFileSync(join(DOSSIER, f), 'utf8'))) {
-    await db.exec(instr);
-  }
-}
-
-const uHse = '11111111-1111-1111-1111-111111111111';
-const uMedecin = '22222222-2222-2222-2222-222222222222';
-const uAdmin = '33333333-3333-3333-3333-333333333333';
-const uTravailleur = '44444444-4444-4444-4444-444444444444';
-const SITE_A = 'bbbbbbbb-0000-0000-0000-000000000001';
-const SITE_B = 'bbbbbbbb-0000-0000-0000-000000000002';
-const ZONE_A = 'cccccccc-0000-0000-0000-000000000001';
-
-try {
-  await db.exec(`
-    insert into auth.users (id, email) values
-      ('${uHse}', 'hse@exemple.bf'),
-      ('${uMedecin}', 'medecin@exemple.bf'),
-      ('${uAdmin}', 'admin@exemple.bf'),
-      ('${uTravailleur}', 'ouvrier@exemple.bf');
-
-    insert into app.secteurs (id, code, libelle, description) values
-      ('aaaaaaaa-0000-0000-0000-000000000001', 'MIN', 'Mines', 'Exploitation miniere');
-
-    insert into app.sites (id, secteur_id, code, nom, localisation) values
-      ('${SITE_A}', 'aaaaaaaa-0000-0000-0000-000000000001', 'POU', 'Mine de Poura',
-        ST_SetSRID(ST_MakePoint(0,0),4326)::geography),
-      ('${SITE_B}', 'aaaaaaaa-0000-0000-0000-000000000001', 'KOS', 'Cimenterie de Kossodo',
-        ST_SetSRID(ST_MakePoint(1,1),4326)::geography);
-
-    insert into app.zones (id, site_id, code, nom) values
-      ('${ZONE_A}', '${SITE_A}', 'Z1', 'Front de taille');
-
-    insert into app.profiles (id, nom, prenom, role_acteur) values
-      ('${uHse}', 'Herve', 'Kone', 'responsable_hse'),
-      ('${uMedecin}', 'Mariam', 'Ouedraogo', 'medecin_du_travail'),
-      ('${uAdmin}', 'Amina', 'Zongo', 'administrateur'),
-      ('${uTravailleur}', 'Ibrahim', 'Sawadogo', 'travailleur');
-
-    insert into app.profile_sites (profile_id, site_id) values
-      ('${uHse}', '${SITE_A}'),
-      ('${uMedecin}', '${SITE_A}'),
-      ('${uAdmin}', '${SITE_A}'),
-      ('${uAdmin}', '${SITE_B}'),
-      ('${uTravailleur}', '${SITE_A}');
-  `);
-} catch (e) {
-  console.log('ECHEC SEED : ' + (e && e.message ? e.message : String(e)));
-  process.exit(2);
-}
-
-const resultats = [];
-function verifier(nom, condition, detail = '') {
-  resultats.push({ nom, ok: !!condition, detail });
-  console.log(`${condition ? '  [OK]' : '  [KO]'} ${nom}${detail ? ' — ' + detail : ''}`);
-}
-
-console.log('\n=== 1. Generation automatique de la reference ===');
-await db.exec(`
-  insert into app.signalements (type_evenement, titre, description, site_id, zone_id, auteur_id, categorie)
-  values ('danger', 'Sol huileux au concasseur', 'Glissade possible', '${SITE_A}', '${ZONE_A}',
-          '${uTravailleur}', 'environnement');
-`);
-const reference = (await db.query('select reference from app.signalements limit 1')).rows[0]?.reference;
-verifier('reference generee au format SIG-YYYY-NNNN', /^SIG-\d{4}-\d{4}$/.test(reference || ''), reference);
-
-await db.exec(`
-  insert into app.signalements (type_evenement, titre, description, site_id, auteur_id, categorie)
-  values ('incident', 'Eclairage defaillant', 'Passage sombre', '${SITE_A}', '${uTravailleur}', 'mecanique');
-`);
-const reference2 = (await db.query('select reference from app.signalements order by created_at desc limit 1')).rows[0]?.reference;
-verifier('reference incrementee et unique', reference2 !== reference && !!reference2, `${reference} -> ${reference2}`);
-
-console.log('\n=== 2. Trigger de cloture : un non-HSE ne peut pas cloturer ===');
-await db.exec(`
-  insert into app.actions_correctives (signalement_id, titre, site_id, responsable_id, statut, echeance_at, avancement)
-  select id, 'Nettoyer le sol', site_id, '${uTravailleur}', 'en_cours', current_date - 5, 50
-  from app.signalements limit 1;
-`);
-const actionId = (await db.query('select id from app.actions_correctives limit 1')).rows[0].id;
-
-let clotureRefusee = false;
-try {
-  await db.exec(`
-    update app.actions_correctives set statut = 'cloturee', cloturee_at = now() where id = '${actionId}';
-  `);
-} catch (e) {
-  clotureRefusee = /comp[ée]tente/i.test(e.message || '');
-}
-verifier('cloture par un non-HSE refusee', clotureRefusee);
-
-let clotureHseOk = false;
-try {
-  await db.exec(`set request.jwt.claim.sub = '${uHse}'`);
-  await db.exec(`
-    update app.actions_correctives set statut = 'cloturee', cloturee_at = now(),
-      cloturee_par = '${uHse}', verification = 'Verifie sur site'
-    where id = '${actionId}';
-  `);
-  clotureHseOk = true;
-} catch (e) {
-  console.log('  (detail cloture HSE : ' + (e && e.message ? e.message : String(e)) + ')');
-}
-const st = (await db.query('select statut from app.actions_correctives where id = $1', [actionId])).rows[0];
-verifier('cloture par un HSE acceptee', clotureHseOk && st?.statut === 'cloturee', st?.statut);
-
-await db.exec(`set request.jwt.claim.sub = ''`);
-
-console.log('\n=== 3. Trigger de protection du role ===');
-let roleBloque = false;
-try {
-  await db.exec(`set request.jwt.claim.sub = '${uTravailleur}'`);
-  await db.exec(`update app.profiles set role_acteur = 'administrateur' where id = '${uTravailleur}'`);
-} catch (e) {
-  roleBloque = true;
-  console.log('  (detail role : ' + (e && e.message ? e.message : String(e)) + ')');
-}
-verifier('auto-promotion en administrateur refusee', roleBloque);
-
-console.log('\n=== 4. RLS : visibilite par role ===');
-async function enRole(role, sql, params = []) {
-  await db.exec(`set role ${role}`);
+let erreurFatale = null;
+for (const [i, instr] of instructions.entries()) {
   try {
-    const r = await db.query(sql, params);
-    return r.rows;
-  } finally {
-    await db.exec('reset role');
-  }
-}
-try {
-  await db.exec(`set request.jwt.claim.sub = '${uHse}'`);
-  await db.exec(`set role authenticated`);
-  await db.exec(`reset role`);
-  const hse = await enRole('authenticated', 'select count(*)::int n from app.signalements');
-  verifier('HSE voit les signalements de son site', hse[0].n === 2, `${hse[0].n} lignes`);
-
-  const sitesHse = await enRole('authenticated', 'select count(*)::int n from app.sites');
-  verifier('HSE ne voit que son site', sitesHse[0].n === 1, `${sitesHse[0].n} site(s)`);
-
-  const medicalHse = await enRole('authenticated', 'select count(*)::int n from medical.dossiers');
-  verifier('HSE n accede pas au schema medical', medicalHse[0].n === 0, `${medicalHse[0].n} dossier(s)`);
-
-  await db.exec(`set request.jwt.claim.sub = '${uAdmin}'`);
-  const sitesAdmin = await enRole('authenticated', 'select count(*)::int n from app.sites');
-  verifier('administrateur voit tous les sites', sitesAdmin[0].n === 2, `${sitesAdmin[0].n} sites`);
-
-  await db.exec(`set request.jwt.claim.sub = '${uMedecin}'`);
-  const dossiersMedecin = await enRole(
-    'authenticated',
-    `insert into medical.dossiers (site_id, type_dossier, observations) values ('${SITE_A}', 'visite_medicale', 'test') returning id`,
-  );
-  verifier('medecin du travail peut creer un dossier medical', dossiersMedecin.length === 1);
-
-  const dossiersMedecinB = await enRole(
-    'authenticated',
-    `insert into medical.dossiers (site_id, type_dossier, observations) values ('${SITE_B}', 'visite_medicale', 'hors perimetre')`,
-  ).then(() => false).catch(() => true);
-  verifier('medecin ne peut pas ecrire hors de son perimetre de sites', dossiersMedecinB);
-
-  await db.exec(`set request.jwt.claim.sub = '${uHse}'`);
-  let hseCree = true;
-  try {
-    await enRole(
-      'authenticated',
-      `insert into medical.dossiers (site_id, type_dossier, observations) values ('${SITE_A}', 'visite_medicale', 'test')`,
-    );
+    // db.exec() decoupe sur « ; » et ne respecte pas les corps $...$ :
+    // les blocs DO passent par db.query() (une seule instruction).
+    if (/^\s*do\b/i.test(instr)) await db.query(instr);
+    else await db.exec(instr);
   } catch (e) {
-    hseCree = false;
+    // Le dernier bloc de rls.sql est un bilan : il leve une exception
+    // volontaire quand un test a echoue. On la rattrape, on revert la
+    // transaction et on lit les resultats, qui sont deja ecrits.
+    if (i === instructions.length - 1) {
+      console.log(`  bilan : ${String(e.message).split('\n')[0]}`);
+      try {
+        await db.exec('rollback');
+      } catch {
+        /* session deja propre */
+      }
+      break;
+    }
+    erreurFatale = { n: i + 1, message: String(e.message).split('\n')[0] };
+    break;
   }
-  verifier('HSE ne peut pas creer de dossier medical', !hseCree);
-
-  await db.exec(`set request.jwt.claim.sub = '${uTravailleur}'`);
-  const sitesTrav = await enRole('authenticated', 'select count(*)::int n from app.sites');
-  verifier('travailleur ne voit que son site', sitesTrav[0].n === 1, `${sitesTrav[0].n} site(s)`);
-} catch (e) {
-  verifier('execution des tests RLS', false, e.message);
+}
+if (erreurFatale) {
+  console.error(`  [ECHEC EXECUTION] instruction #${erreurFatale.n} : ${erreurFatale.message}`);
+  process.exit(1);
 }
 
-console.log('\n=== 5. Journal d\'audit ===');
-const journal = (await db.query('select count(*)::int n from app.journal_modifications')).rows[0].n;
-verifier('journal des modifications alimente par trigger', journal >= 2, `${journal} entrees`);
+// ── 4. Controles complementaires ──────────────────────────────────────────────
+// Ces controles sont exiges par le PV de recette (CR02, CR04) mais ne sont
+// pas couverts par rls.sql : ils sont verifies ici, dans la meme session.
 
-console.log('\n=== 6. Separation du schema medical ===');
-const medicalCols = (await db.query(`
-  select column_name from information_schema.columns
-  where table_schema = 'medical' and table_name = 'dossiers'
-`)).rows;
-verifier('table medical.dossiers creee', medicalCols.length > 0, `${medicalCols.length} colonnes`);
-const medicalPolicy = (await db.query(`
-  select count(*)::int n from pg_policies where schemaname = 'medical'
-`)).rows[0].n;
-verifier('politiques RLS presentes sur medical', medicalPolicy > 0, `${medicalPolicy} politiques`);
-const medicalGrant = (await db.query(`
-  select count(*)::int n from information_schema.role_table_grants
-  where table_schema = 'medical' and table_name = 'dossiers' and grantee = 'authenticated'
-`)).rows[0].n;
-verifier('droits de lecture Accordes sur medical.dossiers (filtres par RLS)', medicalGrant > 0, `${medicalGrant} droits`);
-
-const anonGrant = (await db.query(`
-  select count(*)::int n from information_schema.role_table_grants
-  where table_schema in ('app','medical') and grantee = 'anon'
-`)).rows[0].n;
-verifier('aucun droit pour le role anon sur app et medical', anonGrant === 0, `${anonGrant} droits`);
-
-console.log('\n===================');
-const ko = resultats.filter((r) => !r.ok);
-console.log(`${resultats.length - ko.length}/${resultats.length} tests fonctionnels reussis`);
-if (ko.length) {
-  console.log('ECHECS :');
-  for (const k of ko) console.log(`  - ${k.nom} ${k.detail}`);
+/** Execute une instruction comme un utilisateur authentifie et capture l'erreur. */
+async function executerComme(sub, sql) {
+  await db.exec('begin');
+  try {
+    await db.exec('set local role authenticated');
+    await db.exec(`set local request.jwt.claims = '{"sub":"${sub}"}'`);
+    const resultat = await db.query(sql);
+    await db.exec('reset role');
+    await db.exec('commit');
+    return { ok: true, lignes: resultat.rows };
+  } catch (e) {
+    try {
+      await db.exec('rollback');
+    } catch {
+      /* session deja propre */
+    }
+    return { ok: false, code: codeSqlstate(e), message: String(e.message).split('\n')[0] };
+  }
 }
-process.exit(ko.length ? 1 : 0);
+
+/** SQLSTATE d'une erreur PGlite (23514 pour une violation de contrainte). */
+function codeSqlstate(e) {
+  if (!e) return null;
+  if (typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code)) return e.code;
+  if (typeof e.sqlstate === 'string' && /^[0-9A-Z]{5}$/.test(e.sqlstate)) return e.sqlstate;
+  const message = String(e.message || '');
+  const trouve = message.match(/(?:code|SQLSTATE)\s*[:=]\s*([0-9A-Z]{5})/i);
+  return trouve ? trouve[1] : null;
+}
+
+const controles = [];
+
+async function enregistrer(nom, ok, detail = '') {
+  controles.push({ nom, ok: !!ok, detail });
+  console.log(`  [${ok ? 'OK' : 'KO'}] ${nom}${detail ? ' — ' + detail : ''}`);
+  await db.query('insert into pg_temp.rls_results (test_name, ok, detail) values ($1, $2, $3)', [
+    nom,
+    !!ok,
+    detail || null,
+  ]);
+}
+
+console.log('\n=== 4. Controles complementaires (PV de recette) ===');
+
+// C01 — la reference est generee automatiquement au format PES-AAAA-NNNNN
+const rapporter = `(public.submit_safety_event(
+     'danger'::public.event_kind, '${SITE_A}'::uuid, '${ZONE_A}'::uuid, null, now(),
+     'Sack fell from the pallet and blocked the marked pedestrian aisle.',
+     'Manual handling of sacks on the production line',
+     'Isolated the aisle and placed a warning sign.'))`;
+const premiere = await executerComme(SALARIE_A, `select ${rapporter}->>'reference' as reference`);
+const seconde = await executerComme(SALARIE_A, `select ${rapporter}->>'reference' as reference`);
+const ref1 = premiere.ok ? premiere.lignes[0]?.reference : null;
+const ref2 = seconde.ok ? seconde.lignes[0]?.reference : null;
+await enregistrer(
+  'C01 reference generee automatiquement au format PES-AAAA-NNNNN',
+  premiere.ok &&
+    seconde.ok &&
+    /^PES-\d{4}-\d{5}$/.test(ref1 || '') &&
+    /^PES-\d{4}-\d{5}$/.test(ref2 || '') &&
+    ref1 !== ref2,
+  premiere.ok ? `${ref1} puis ${ref2}` : premiere.message,
+);
+
+// C02 — une description vide est refusee par la base (23514)
+const vide = await executerComme(
+  SALARIE_A,
+  `select ${rapporter.replace(
+    'Sack fell from the pallet and blocked the marked pedestrian aisle.',
+    '   ',
+  )}->>'reference' as reference`,
+);
+await enregistrer(
+  'C02 description vide refusee par la base (SQLSTATE 23514)',
+  !vide.ok && vide.code === '23514' && /description/i.test(vide.message || ''),
+  vide.ok ? 'aucune exception levee' : `${vide.code} ${vide.message}`,
+);
+
+// C03 — une action ne peut pas etre close sans passer par « to_verify »
+const clotureDirecte = await executerComme(
+  HSE,
+  `update public.corrective_actions
+      set status = 'closed',
+          closed_at = now(),
+          closed_by = '${HSE}'::uuid,
+          closure_evidence_path = 'action-evidence/${ACTION_ENCOURS}/v1/preuve.pdf',
+          closure_note = 'Capteur remplace',
+          verified_by = '${HSE}'::uuid,
+          verified_at = now()
+    where id = '${ACTION_ENCOURS}'::uuid`,
+);
+await enregistrer(
+  'C03 cloture directe refusee sans le statut « to_verify » (SQLSTATE 23514)',
+  !clotureDirecte.ok &&
+    clotureDirecte.code === '23514' &&
+    /to_verify/i.test(clotureDirecte.message || ''),
+  clotureDirecte.ok ? 'aucune exception levee' : `${clotureDirecte.code} ${clotureDirecte.message}`,
+);
+
+// C04 — l'actionnaire ne peut pas verifier sa propre action
+const autoVerification = await executerComme(
+  HSE,
+  `update public.corrective_actions
+      set status = 'closed',
+          closed_at = now(),
+          closed_by = '${HSE}'::uuid,
+          closure_evidence_path = 'action-evidence/${ACTION_A_VERIFIER}/v1/preuve.pdf',
+          closure_note = 'Aspiration installee',
+          verified_by = '${ENCADREMENT}'::uuid,
+          verified_at = now()
+    where id = '${ACTION_A_VERIFIER}'::uuid`,
+);
+await enregistrer(
+  'C04 auto-verification refusee (SQLSTATE 23514)',
+  !autoVerification.ok &&
+    autoVerification.code === '23514' &&
+    /own owner/i.test(autoVerification.message || ''),
+  autoVerification.ok ? 'aucune exception levee' : `${autoVerification.code} ${autoVerification.message}`,
+);
+
+// C05 — les compteurs du tableau de bord respectent le perimetre RLS
+// (`v_dashboard_kpi` est `security_invoker` : c'est la politique RLS de
+// `safety_events` qui filtre les lignes, pas la vue).
+const kpi = await executerComme(
+  SALARIE_A,
+  `select count(*)::int as total,
+          count(*) filter (where site_id <> '${SITE_A}'::uuid)::int as hors_perimetre
+     from public.v_dashboard_kpi`,
+);
+await enregistrer(
+  'C05 v_dashboard_kpi limite au perimetre de l utilisateur',
+  kpi.ok && kpi.lignes[0]?.total > 0 && kpi.lignes[0]?.hors_perimetre === 0,
+  kpi.ok
+    ? `${kpi.lignes[0].total} ligne(s), ${kpi.lignes[0].hors_perimetre} hors perimetre`
+    : kpi.message,
+);
+
+// ── 5. Bilan ──────────────────────────────────────────────────────────────────
+const bilan = await db.query(
+  'select count(*)::int as total, count(*) filter (where ok)::int as reussis from pg_temp.rls_results',
+);
+const { total, reussis } = bilan.rows[0];
+const echecs = await db.query(
+  'select test_name, detail from pg_temp.rls_results where not ok order by id',
+);
+
+console.log('\n=== Bilan ===');
+console.log(`  ${total} controle(s) execute(s) — ${reussis} reussi(s), ${total - reussis} echec(s)`);
+for (const e of echecs.rows) {
+  console.error(`  [ECHEC] ${e.test_name}${e.detail ? ' — ' + e.detail : ''}`);
+}
+
+if (total - reussis > 0) {
+  console.error('\nTest fonctionnel : ECHEC');
+  process.exit(1);
+}
+console.log('\nTest fonctionnel : OK');
+process.exit(0);
