@@ -93,6 +93,19 @@ jobs:
   # ENABLE_BASE_REELLE vaut "true" (Settings > Secrets and variables > Actions
   # > Variables). Les deux secrets attendus sont VITE_SUPABASE_URL et
   # VITE_SUPABASE_ANON_KEY (cle publique, deja exposee au navigateur).
+  #
+  # NE PAS L'ACTIVER TEL QUEL. La suite E2E adresse les enregistrements par
+  # les identifiants du jeu de demonstration (`act-3`, `evt-6`), alors que
+  # PostgreSQL les stocke sous forme d'UUID (`bbbbbbbb-0000-4000-8000-...`).
+  # Une route comme `/hse/actions/act-3/verify` ne resoudrait donc rien sur la
+  # base reelle. De plus, CR04 cloture l'action qu'il visite : le second
+  # passage la trouve deja fermee, et le rejeu n'est pas idempotent.
+  #
+  # Pour couvrir la base reelle, le controle dedie est
+  # `tools/verifier-base.mjs` : RLS, cloisonnement par site et preuve aal2 du
+  # second facteur. Porter la suite entiere vers la base reelle suppose
+  # d'abord de resoudre les identifiants par reference, et non par
+  # identifiant de demonstration.
   recette-base-reelle:
     name: Recette E2E sur la base Supabase de recette
     if: ${{ vars.ENABLE_BASE_REELLE == 'true' }}
