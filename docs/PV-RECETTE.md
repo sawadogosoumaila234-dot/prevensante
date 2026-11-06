@@ -22,7 +22,7 @@
 | URL testée | `http://localhost:4182` (`vite preview` du build `web/dist`) |
 | Date de début de recette | 27/10/2026 |
 | Date de clôture de recette | 05/11/2026 |
-| Responsable recette (commanditaire) | Soumaila Sawadogo — Commanditaire |
+| Responsable recette (commanditaire) | SAWADOGO Soumaila — Commanditaire |
 | Responsable technique | PrevEnSanté — réalisation technique, sous votre pilotage |
 | Site pilote | **Usine de Soumbo** (`SMB`) — secteur cimenterie (`cement`), arbitrage A1 tranché le 02/11/2026 (§ 5) |
 | Nombre de critères de réception | **7** (CR01 → CR07) |
@@ -97,7 +97,7 @@
 | **Cas de test associé** | `e2e/cr01-access-denied-site.spec.ts` + `supabase/tests/rls.sql` (cas 1 : « salarié limité à son site ») |
 | **Statut** | `Conforme` |
 | **Résultat observé** | **Conforme.** Un salarié accède à son propre signalement même hors de son site (`PES-2026-00036`, site 3) ; le HSE de son organisation voit les événements du site 2 (`PES-2026-00037`) et reçoit « You are not allowed to access this site. » pour le site 3 ; la liste `/hse/events` n'expose aucun événement d'une autre organisation ; un salarié sans rôle HSE reste bloqué sur l'espace métier. Côté base : T01 et T18 passent. 5 tests desktop + 5 mobile. |
-| **Visa / Signature** | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| **Visa / Signature** | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 
 ---
 
@@ -111,7 +111,7 @@
 | **Cas de test associé** | `e2e/cr02-submit-danger-and-missing-field.spec.ts` |
 | **Statut** | `Conforme` |
 | **Résultat observé** | **Conforme.** Un danger complet produit une référence unique `PES-2026-xxxxx` et l'écran « Report recorded » ; une description omise est refusée côté client (« A description is required. »), le formulaire ne passe pas à l'étape suivante et aucune référence n'est enregistrée. Côté base : C01 (deux références successives distinctes au format `PES-AAAA-NNNNN`) et C02 (description vide → SQLSTATE `23514`, « A description is required ») passent. 2 tests desktop + 2 mobile. |
-| **Visa / Signature** | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| **Visa / Signature** | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 
 ---
 
@@ -125,7 +125,7 @@
 | **Cas de test associé** | `e2e/cr03-complete-event-and-medical-isolation.spec.ts` + `supabase/tests/rls.sql` (cas 5 : « HSE non habilité ne peut pas lire medical_records ») |
 | **Statut** | `Conforme` |
 | **Résultat observé** | **Conforme.** Le type de l'événement est affiché et un commentaire est historisé dans la timeline (onglet « Comments ») ; le salarié comme le HSE non habilité n'obtiennent aucun dossier médical (contrôle `toHaveCount(0)` sur les textes médicaux sensibles) ; le médecin du travail lit les dossiers. Côté base : T05 (HSE non habilité), T06 (médecin habilité), T11 et T12 passent. 4 tests desktop + 4 mobile. |
-| **Visa / Signature** | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| **Visa / Signature** | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 
 ---
 
@@ -139,7 +139,7 @@
 | **Cas de test associé** | `e2e/cr04-corrective-action-lifecycle.spec.ts` + `supabase/tests/rls.sql` (cas 6 : « un action_owner ne peut pas clôturer son propre dossier ») |
 | **Statut** | `Conforme` |
 | **Résultat observé** | **Conforme.** `owner_id`, `due_at` et `status` sont enregistrés ; une action à échéance dépassée est signalée comme échue ; une action non soumise ne peut pas être clôturée ; le HSE clôture une action passée par `to_verify` ; le propriétaire ne peut pas vérifier sa propre action. Côté base : T07 et T08 passent, ainsi que C03 (clôture directe refusée, SQLSTATE `23514`, « An action must pass through the "to_verify" status before closing ») et C04 (auto-vérification refusée, `23514`, « An action cannot be verified by its own owner »). 4 tests desktop + 4 mobile. |
-| **Visa / Signature** | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| **Visa / Signature** | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 
 ---
 
@@ -153,7 +153,7 @@
 | **Cas de test associé** | `e2e/cr05-dashboard-filters.spec.ts` + contrôle `v_dashboard_kpi` (`npm run db:test`) |
 | **Statut** | `Conforme` |
 | **Résultat observé** | **Conforme.** Les compteurs du tableau de bord correspondent aux filtres (site, type, sévérité) et au périmètre RLS ; un filtre sans résultat affiche l'état vide ; un salarié ne voit que ses propres événements dans « My reports ». Le test pgTAP `v_dashboard_kpi` cité dans cette fiche **n'existait pas** : il a été écrit (C05 — la vue est `security_invoker`, 9 lignes pour le périmètre du salarié, 0 ligne hors périmètre). 4 tests desktop + 4 mobile. |
-| **Visa / Signature** | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| **Visa / Signature** | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 
 ---
 
@@ -167,7 +167,7 @@
 | **Cas de test associé** | `e2e/cr06-assistant-proposal.spec.ts` |
 | **Statut** | `Conforme` |
 | **Résultat observé** | **Conforme.** Une proposition reste en attente de décision humaine et n'est jamais appliquée automatiquement (`risk_category_id` inchangé) ; les références sont limitées aux documents `validated` ; l'acceptation humaine applique la catégorie et trace le relecteur. Côté base : T13 et T14 passent. 3 tests desktop + 3 mobile. |
-| **Visa / Signature** | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| **Visa / Signature** | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 
 ---
 
@@ -181,7 +181,7 @@
 | **Cas de test associé** | `e2e/cr07-critical-danger-escalation.spec.ts` |
 | **Statut** | `Conforme` |
 | **Résultat observé** | **Conforme.** La bannière d'urgence s'affiche (« This application does not replace your site emergency procedures... ») ; l'escalade de niveau 1 est créée ; l'événement passe en `escalated` et l'escalade est consultable par le HSE ; aucune proposition IA n'est proposée avant le traitement de l'alerte. Côté base : T15 passe. 3 tests desktop + 3 mobile. |
-| **Visa / Signature** | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| **Visa / Signature** | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 
 ## 4. Synthèse et signatures
 
@@ -200,8 +200,8 @@
 | | |
 |---|---|
 | Date | 05/11/2026 |
-| Commanditaire — nom, qualité | Soumaila Sawadogo — Commanditaire |
-| Signature | Visa électronique — Soumaila Sawadogo, Commanditaire — 05/11/2026 |
+| Commanditaire — nom, qualité | SAWADOGO Soumaila — Commanditaire |
+| Signature | Visa électronique — SAWADOGO Soumaila, Commanditaire — 05/11/2026 |
 | Réserve / observations | Aucune réserve. |
 
 > *Mode de signature retenu : visa électronique du commanditaire, apposé le 05/11/2026 et reporté
@@ -224,7 +224,7 @@ a été **proposé puis tranché** : les cinq décisions sont prises, signées e
 > règle technique déjà implémentée, les options possibles et **le coût exact du changement**.
 > C'est le document qui portait les options ; le présent PV se contente d'enregistrer la décision.
 
-> **Les cinq arbitrages sont tranchés et signés le 02/11/2026** par Soumaila Sawadogo,
+> **Les cinq arbitrages sont tranchés et signés le 02/11/2026** par SAWADOGO Soumaila,
 > Commanditaire. Les décisions sont reportées ci-dessous ; la fiche `docs/ARBITRAGES.md` porte le
 > détail et la date. Une seule décision a demandé un changement de code : A3 (migration `0021`).
 
@@ -235,7 +235,7 @@ a été **proposé puis tranché** : les cinq décisions sont prises, signées e
 | **Décision par défaut retenue** | **Un seul site pilote** (`sites.is_pilot = true`), un secteur de référence (cimenterie ou mine à confirmer) ; les autres sites, zones et secteurs sont créables sans migration. |
 | **Ce qui doit être validé** | Le site pilote retenu, son secteur, et la confirmation que le MVP reste mono-site pilote. |
 | **Conséquence si non tranché** | Le seed de démonstration (organisation « Cimenterie du Sahel », site « Usine de Soumbo », secteur `cement`) ne peut pas être considéré comme le périmètre réel : `risk_categories`, le corpus de consignes et les habilitations seraient à refaire. |
-| **Statut** | `VALIDÉ` — Soumaila Sawadogo, Commanditaire — 02/11/2026 |
+| **Statut** | `VALIDÉ` — SAWADOGO Soumaila, Commanditaire — 02/11/2026 |
 | **Décision** | Site pilote : **Usine de Soumbo** (`SMB`). Secteur : **cimenterie** (`cement`). Le MVP **reste mono-site pilote** : oui. |
 
 ### A3 — Vérification avant clôture d'une action corrective
@@ -246,7 +246,7 @@ a été **proposé puis tranché** : les cinq décisions sont prises, signées e
 | **Ce qui doit être validé** | La règle elle-même, et notamment le cas de l'administrateur : la base (`can_verify_action`, migration `0010`) l'autorise à vérifier une action, l'interface (`web/src/lib/rls/permissions.ts`) le refuse. Les deux sources de vérité doivent être alignées sur la décision. |
 | **Ce qui doit être validé (suite)** | La liste nominative des vérificateurs habilités par site (rôles `hse_officer`, `site_director`). |
 | **Conséquence si non tranché** | CR04 ne peut être déclaré conforme ; l'administrateur ne peut pas valider une action à la place du HSE (séparation des responsabilités). |
-| **Statut** | `VALIDÉ` — Soumaila Sawadogo, Commanditaire — 02/11/2026 |
+| **Statut** | `VALIDÉ` — SAWADOGO Soumaila, Commanditaire — 02/11/2026 |
 | **Décision** | L'administrateur **ne vérifie pas**. Vérificateurs habilités : `hse_officer` et `site_director`, sur le site de l'action ou dans la même organisation. Preuve de clôture **obligatoire**. |
 | **Mise en œuvre** | Migration `0021` : `can_verify_action` ne reconnaît plus l'administrateur, et le trigger `guard_action_transition` refuse toute clôture dont l'acteur n'est pas un vérificateur habilité — l'application écrivant directement dans `corrective_actions`, le trigger est le seul point de passage réel. Test de non-régression : T22. |
 
@@ -257,7 +257,7 @@ a été **proposé puis tranché** : les cinq décisions sont prises, signées e
 | **Décision par défaut retenue** | Un document n'est consultable par l'IA que si `status = 'validated'` **et** `validated_by` est renseigné ; la version courante est incrémentée à chaque validation ; une révision est due (`review_due_at`). |
 | **Ce qui doit être validé** | Le référent habilité à valider, le périmètre (secteur / site) du corpus, et la périodicité de révision. |
 | **Conséquence si non tranché** | L'assistant reste indisponible ou ne peut citer aucune consigne : CR06 ne peut être validé sur le fond. |
-| **Statut** | `VALIDÉ` — Soumaila Sawadogo, Commanditaire — 02/11/2026 |
+| **Statut** | `VALIDÉ` — SAWADOGO Soumaila, Commanditaire — 02/11/2026 |
 | **Décision** | Le **HSE du site pilote** (`hse_officer`) valide. Périmètre du corpus : **le site**. Revue **annuelle**. Alerte automatique à l'échéance : **non** — l'échéance est affichée, rien de plus. |
 
 ### A7 — Rôle de l'IA
@@ -267,7 +267,7 @@ a été **proposé puis tranché** : les cinq décisions sont prises, signées e
 | **Décision par défaut retenue** | **Consultatif** : toute proposition est enregistrée dans `ai_proposals`, proposée, puis acceptée ou rejetée par un humain ; **aucune validation automatique**. |
 | **Ce qui doit être validé** | Le mode d'activation retenu pour le pilote (`AI_MODE=rules` sans fournisseur, ou `AI_MODE=live` avec un fournisseur), et le périmètre des cas où l'assistant est proposé. Attention : le mode `live` suppose l'Edge Function `propose-classification`, qui **n'est pas implémentée dans ce dépôt** (`supabase/functions/` est absent, comme les 7 autres fonctions décrites au § 2.7 du runbook). Le mode `rules` — celui du seed — n'en dépend pas. |
 | **Conséquence si non tranché** | CR06 et CR07 restent conditionnés à la confirmation que l'IA ne peut jamais valider seule une catégorie ni retarder une intervention urgente. |
-| **Statut** | `VALIDÉ` — Soumaila Sawadogo, Commanditaire — 02/11/2026 |
+| **Statut** | `VALIDÉ` — SAWADOGO Soumaila, Commanditaire — 02/11/2026 |
 | **Décision** | Mode au pilote : **`rules`** (moteur de règles local, aucun fournisseur d'IA). L'IA **ne valide jamais seule** une catégorie. Périmètre : classification d'un signalement, **hors danger critique** — aucune proposition automatique sur un danger critique (CR07). |
 
 ### A10 — Modalités de stockage, de sauvegarde et d'hébergement
@@ -277,7 +277,7 @@ a été **proposé puis tranché** : les cinq décisions sont prises, signées e
 | **Décision par défaut retenue** | Supabase (région la plus proche), sauvegarde quotidienne automatique + export hebdomadaire hors site ; détail de l'hébergement à confirmer par le commanditaire. |
 | **Ce qui doit être validé** | La région d'hébergement, la durée de conservation des sauvegardes, la localisation du stockage secondaire, le coût et le responsable de l'exploitation. |
 | **Conséquence si non tranché** | La stratégie de sauvegarde décrite dans `docs/DEPLOIEMENT.md` § 9 reste une proposition ; le test de restauration trimestriel n'a pas de responsable nommé. |
-| **Statut** | `VALIDÉ` — Soumaila Sawadogo, Commanditaire — 02/11/2026 |
+| **Statut** | `VALIDÉ` — SAWADOGO Soumaila, Commanditaire — 02/11/2026 |
 | **Décision** | La proposition § 9 est validée : hébergement **Supabase Cloud, Europe (Paris)**, région `eu-west-3` (vérifiée sur l'instance) ; sauvegarde quotidienne automatique + export hebdomadaire hors site. |
 | **Points restants** | La durée de conservation des sauvegardes, le responsable de l'exploitation et le responsable du test de restauration restent **à nommer** par le commanditaire. Ils ne bloquent pas la recette : ce sont des paramètres d'exploitation, pas des règles métier. |
 
@@ -334,7 +334,7 @@ Points également hors périmètre du MVP, issus de l'analyse et du PRD :
       **13 contrôles, 13 réussis, 0 échec**. Rapports : `docs/rapports/PUBLICATION-2026-11-01-*.md`,
       `docs/rapports/PUBLICATION-2026-11-03-12-12.md`.
 - [x] Les 5 arbitrages du § 5 (A1, A3, A6, A7, A10) sont tranchés et signés — **fait le
-      02/11/2026** par Soumaila Sawadogo, Commanditaire. Décisions, dates et détail dans
+      02/11/2026** par SAWADOGO Soumaila, Commanditaire. Décisions, dates et détail dans
       `docs/ARBITRAGES.md`.
 - [x] Les habilitations du site pilote sont nommées (rôle + site + MFA pour les rôles concernés).
       *Relevé sur l'instance le 05/11/2026 (`tools/tableau-habilitations.mjs`) :*
@@ -358,17 +358,17 @@ Points également hors périmètre du MVP, issus de l'analyse et du PRD :
       HSE, son second facteur devait l'être aussi. Les trois salariés n'ont pas de second facteur :
       leur compte ne donne accès qu'à leurs propres signalements.*
       *Décision : les huit comptes de recette sont conservés comme comptes du site pilote —
-      Soumaila Sawadogo, Commanditaire — 05/11/2026.*
+      SAWADOGO Soumaila, Commanditaire — 05/11/2026.*
 - [x] Le périmètre pilote est confirmé (un seul site) — **fait le 02/11/2026** : arbitrage A1,
       site Usine de Soumbo (`SMB`), le MVP reste mono-site.
 - [x] La procédure de vérification des clôtures est confirmée : aucune clôture par l'actionnaire,
       preuve obligatoire — **fait le 02/11/2026** : arbitrage A3. L'administrateur ne vérifie pas ;
       la règle est désormais portée par la base (migration `0021`), pas seulement par l'interface.
 - [x] Les points du § 6 sont confirmés comme hors périmètre — **fait le 03/11/2026** par
-      Soumaila Sawadogo, Commanditaire : ce qui est listé au § 6 n'est pas attendu pour ce pilote
+      SAWADOGO Soumaila, Commanditaire : ce qui est listé au § 6 n'est pas attendu pour ce pilote
       et son absence n'est pas un motif de non-conformité.
 - [x] Le PV est signé par le commanditaire — **fait le 05/11/2026** : visa électronique apposé
-      par Soumaila Sawadogo, Commanditaire, sur les sept critères (CR01 à CR07) et sur la décision
+      par SAWADOGO Soumaila, Commanditaire, sur les sept critères (CR01 à CR07) et sur la décision
       de clôture du § 4. Aucune réserve.
 
 > **Mise en service — 02/11/2026.** L'application est déployée en production sur

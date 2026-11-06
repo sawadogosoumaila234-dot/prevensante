@@ -1,7 +1,7 @@
 # Fiche de décision — les 5 arbitrages du commanditaire
 
 > **Objet.** Les arbitrages A1, A3, A6, A7 et A10 du § 5 du PV de recette ont été **tranchés et
-> signés le 02/11/2026** par Soumaila Sawadogo, Commanditaire. Pour chacun, une règle technique est
+> signés le 02/11/2026** par SAWADOGO Soumaila, Commanditaire. Pour chacun, une règle technique est
 > **déjà écrite et testée** dans le dépôt, et la décision retenue est reportée dans la
 > « Ligne à cocher » correspondante. Le corps de chaque fiche conserve l'analyse : elle dit ce que
 > chaque décision aurait coûté si elle avait été différente.
@@ -68,7 +68,7 @@ la recette navigateur, car les compteurs du tableau de bord et le contenu du ré
 
 - [x] **Site pilote retenu** : Usine de Soumbo (`SMB`)  ·  **Secteur** : cimenterie (`cement`)
 - [x] **Le MVP reste mono-site pilote** : oui
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 ---
 
@@ -117,7 +117,7 @@ normal d'une décision d'architecture — et les migrations sont immuables, donc
 - [x] **Vérificateurs habilités par site** (rôles + sites) : `hse_officer` et `site_director`, sur le
   site de l'action ou dans la même organisation
 - [x] **Preuve de clôture obligatoire** : oui
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 > **Divergence close le 02/11/2026** — migration `0021`. `can_verify_action` ne reconnaît plus
 > l'administrateur, et le trigger `guard_action_transition` refuse toute clôture dont l'acteur
@@ -164,7 +164,7 @@ un site — c'est le référent qui devra l'assurer.
 - [x] **Référent habilité à valider** : le HSE du site pilote (`hse_officer`)
 - [x] **Périmètre du corpus** : site
 - [x] **Périodicité de révision** : annuelle  ·  alerte à l'échéance : non
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 ---
 
@@ -212,7 +212,7 @@ atteignable en l'état.
 - [x] **L'IA ne valide jamais seule** une catégorie : oui
 - [x] **Périmètre des cas où l'assistant est proposé** : classification d'un signalement, hors
   danger critique (CR06 et CR07)
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 ---
 
@@ -257,7 +257,7 @@ ligne de cette fiche qui ne peut pas se fermer par une décision de code.
   pilote
 - [ ] **Responsable du test de restauration** : à nommer par le commanditaire — non bloquant pour
   le pilote
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 > Les trois lignes non cochées ne peuvent pas se fermer par une décision de code : elles demandent
 > un nom et une durée. La fiche le dit elle-même — « sans responsable nommé, le test de restauration

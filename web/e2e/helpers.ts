@@ -220,8 +220,25 @@ export async function loginAs(page: Page, roleLabel: string): Promise<void> {
             `${compte.variable.replace(/_PASSWORD$/, '_MFA_SECRET')}.`,
         );
       }
-      await champCode.fill(codeTotp(secret, Date.now() + (await ecartServeur())));
-      await page.getByRole('button', { name: 'Verify' }).click();
+      // Un code TOTP calcule sur une horloge decalee est refuse. L'ecart est
+      // mesure sur l'instance, mais la mesure et la verification sont
+      // separees par le reseau : le code peut donc tomber juste avant le
+      // basculement de la fenetre de 30 secondes. Les trois instants voisins
+      // sont donc essayes, comme le fait `tools/totp.mjs`.
+      const ecart = await ecartServeur();
+      const base = Date.now() + ecart;
+      for (const instant of [base, base - 30_000, base + 30_000]) {
+        await champCode.fill(codeTotp(secret, instant));
+        await page.getByRole('button', { name: 'Verify' }).click();
+        const suite = await Promise.race([
+          page
+            .waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 5_000 })
+            .then(() => 'arrive' as const)
+            .catch(() => 'refuse' as const),
+          page.waitForTimeout(2_000).then(() => 'reste' as const),
+        ]);
+        if (suite === 'arrive') break;
+      }
     } else if (etape === 'echec') {
       throw new Error(
         `Connexion impossible pour le compte « ${roleLabel} » (${compte.email}) : ` +

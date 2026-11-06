@@ -59,7 +59,7 @@ export default function LoginPage() {
           </span>
           <div>
             <h1 style={{ fontSize: 'var(--fs-22)' }}>PrevEnSanté</h1>
-            <p className="small muted">Workplace risk prevention</p>
+            <p className="small muted">Prévention des risques professionnels</p>
           </div>
         </div>
 

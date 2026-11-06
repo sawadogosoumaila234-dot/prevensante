@@ -36,7 +36,7 @@ une signature.
 
 Pour chacune : ce que le logiciel fait **déjà**, et ce que ça coûte de décider autrement.
 
-> **Les cinq premières sont tranchées le 02/11/2026** (Soumaila Sawadogo, Commanditaire). Elles
+> **Les cinq premières sont tranchées le 02/11/2026** (SAWADOGO Soumaila, Commanditaire). Elles
 > restent listées ci-dessous avec la décision retenue, pour que la fiche soit complète d'un seul
 > tenant. Les points 6a, 6d et 6e sont encore ouverts.
 
@@ -53,7 +53,7 @@ faut refaire les catégories de risque, les consignes et les habilitations.
 
 - [x] Je garde le site de démonstration actuel
 - [ ] Je donne le site réel : ______________________________  secteur : ______________
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 > **Décision** : site **Usine de Soumbo** (`SMB`), secteur **cimenterie** (`cement`), le MVP reste
 > mono-site pilote.
@@ -72,7 +72,7 @@ de données, pas par l'interface.
 - [ ] L'administrateur peut aussi valider : oui / non
 - Vérificateurs habilités (rôles + sites) : `hse_officer` et `site_director`, sur le site de
   l'action ou dans la même organisation
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 > **Décision** : l'administrateur **ne vérifie pas**. La base a été alignée sur cette décision
 > (migration `0021`, test T22) : la règle est désormais garantie par PostgreSQL, et plus seulement
@@ -91,7 +91,7 @@ de données, pas par l'interface.
 
 - [x] Je garde la règle actuelle (recommandé)
 - Référent valideur : le HSE du site pilote (`hse_officer`)  Périmètre : le site  Revue : annuelle
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 > **Décision** : le HSE du site pilote valide, sur le périmètre du site, avec une revue annuelle.
 > L'échéance est affichée, sans alerte automatique.
@@ -109,7 +109,7 @@ suppose un service qui n'existe pas encore dans le projet.
 **Coût si on change** : plusieurs jours de développement, et hors périmètre du pilote.
 
 - [x] Je garde le rôle consultatif (recommandé)
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 > **Décision** : mode `rules` (moteur de règles local, aucun fournisseur), l'IA ne valide jamais
 > seule, et aucune proposition automatique sur un danger critique.
@@ -128,7 +128,7 @@ nom de la personne responsable de l'exploitation.
 
 - [x] Je garde la proposition (recommandé)
 - Durée de conservation : __________  Copie hors site : __________  Responsable : ____________
-- Décisionnel : Soumaila Sawadogo — Commanditaire  Date : 02/11/2026
+- Décisionnel : SAWADOGO Soumaila — Commanditaire  Date : 02/11/2026
 
 > **Décision** : la proposition § 9 du document de déploiement est validée — Supabase Cloud, région
 > Europe (Paris) `eu-west-3` (vérifiée sur l'instance), sauvegarde quotidienne automatique + export
@@ -181,7 +181,7 @@ pas attendu pour ce pilote et ne bloque pas la clôture.
 
 - [x] Confirmé
 
-> *Confirmé le 03/11/2026 par Soumaila Sawadogo, Commanditaire : le § 6 est bien hors périmètre,
+> *Confirmé le 03/11/2026 par SAWADOGO Soumaila, Commanditaire : le § 6 est bien hors périmètre,
 > son absence n'est pas un motif de non-conformité.*
 
 **6e — Signature du procès-verbal.**

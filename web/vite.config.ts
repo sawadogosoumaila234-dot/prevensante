@@ -18,10 +18,10 @@ export default defineConfig({
       injectRegister: null,
       includeAssets: ['assets/icon.svg', 'favicon.svg'],
       manifest: {
-        name: 'PrevEnSanté — Occupational risk prevention',
+        name: 'PrevEnSanté — Prévention des risques professionnels',
         short_name: 'PrevEnSanté',
         description:
-          'Report hazards, follow accidents and corrective actions for mines, cement plants, factories and construction sites.',
+          'Signalez les dangers, suivez les accidents et les actions correctives pour les mines, cimenteries, usines et chantiers.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
