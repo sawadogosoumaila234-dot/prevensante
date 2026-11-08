@@ -85,7 +85,7 @@ code à 6 chiffres → **10 codes de secours affichés une seule fois** → conf
 
 ### 2.4 Migrations
 
-Les migrations s'appliquent dans l'ordre `0001` → `0017`. Chaque fichier a une dépendance
+Les migrations s'appliquent dans l'ordre `0001` → `0022`. Chaque fichier a une dépendance
 explicite des précédents ; **ne jamais les appliquer dans le désordre ni en sauter**.
 
 | # | Fichier | Contenu |
@@ -107,6 +107,11 @@ explicite des précédents ; **ne jamais les appliquer dans le désordre ni en s
 | 0015 | `0015_views.sql` | vues opérationnelles et KPI (`v_dashboard_kpi`, `v_overdue_actions`, `v_recurrent_risks`, `v_accident_rate`) |
 | 0016 | `0016_seed.sql` | site pilote, référentiels, comptes de test |
 | 0017 | `0017_seed_sequences.sql` | aligne les séquences de référence sur le seed (sinon le premier signalement réel entre en collision de clé) |
+| 0018 | `0018_auth_identites_recette.sql` | identités Auth des comptes de recette (correctif instance réelle) |
+| 0019 | `0019_auth_colonnes_texte.sql` | colonnes texte non nullables de `auth.users` (correctif instance réelle) |
+| 0020 | `0020_auth_colonnes_texte_restantes.sql` | colonnes texte restantes de `auth.users` (correctif instance réelle) |
+| 0021 | `0021_arbitrage_a3_verification_habilitee.sql` | arbitrage A3 : seul un vérificateur habilité peut clôturer une action |
+| 0022 | `0022_escalade_notification_hse.sql` | escalade critique déclenchée au triage + notification dans l'application, e-mail et SMS en file d'attente |
 
 Procédure :
 
@@ -117,7 +122,7 @@ supabase link --project-ref <PROJECT_REF>
 
 # Toujours relire avant d'écrire en production
 supabase db push --dry-run
-supabase db push              # applique 0001..0017
+supabase db push              # applique 0001..0022
 
 # Contrôle de non-régression RLS — sans conteneur, sur la machine
 npm run db:test               # exécute supabase/tests/rls.sql dans PGlite
@@ -429,7 +434,7 @@ de ce document. La table de correspondance est fournie juste après.
 | 1 | Créer le projet Supabase (région la plus proche des utilisateurs) et **noter le `project-ref`** | ☐ |
 | 2 | Activer les extensions `pgcrypto`, `pg_cron`, `pg_net` | ☐ |
 | 3 | Configurer l'authentification : provider `Email`, **confirmation d'e-mail ON**, **MFA TOTP autorisé** | ☐ |
-| 4 | Appliquer les migrations **0001 → 0017** dans l'ordre (`supabase db push --dry-run` puis `supabase db push`) | ☐ |
+| 4 | Appliquer les migrations **0001 → 0022** dans l'ordre (`supabase db push --dry-run` puis `supabase db push`) | ☐ |
 | 5 | Exécuter le seed (`supabase db reset` en local ; `psql` sur l'hôte en production) | ☐ |
 | 6 | Créer le premier administrateur (`profiles.role = 'admin'`) et l'affecter à une organisation | ☐ |
 | 7 | Créer l'organisation et le **site pilote** (`sites.is_pilot = true`), ses zones et ses équipements | ☐ |

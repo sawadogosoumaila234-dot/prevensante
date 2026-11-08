@@ -10,7 +10,8 @@
 //   4. contrôles complémentaires exigés par le PV de recette mais absents de
 //      `rls.sql` : format de la référence, refus serveur d'une description
 //      vide (23514), passage obligatoire par « to_verify », interdiction de
-//      vérifier sa propre action.
+//      vérifier sa propre action, périmètre du tableau de bord, escalade et
+//      notification d'un danger critique classé au triage.
 //
 // Aucun conteneur, aucune instance Supabase : tout tourne en local.
 //
@@ -28,6 +29,7 @@ import {
 
 // ── Identifiants du jeu de démonstration (supabase/migrations/0016_seed.sql) ──
 const HSE = 'a0000000-0000-4000-8000-000000000001';
+const ADMIN = 'a0000000-0000-4000-8000-000000000003';
 const SALARIE_A = 'a0000000-0000-4000-8000-000000000004';
 const ENCADREMENT = 'a0000000-0000-4000-8000-000000000006';
 const SITE_A = '22222222-2222-4222-8222-222222222222';
@@ -236,6 +238,165 @@ await enregistrer(
   kpi.ok
     ? `${kpi.lignes[0].total} ligne(s), ${kpi.lignes[0].hors_perimetre} hors perimetre`
     : kpi.message,
+);
+
+// C06 — un danger classe « critical » au triage escalade ET notifie le HSE
+//
+// C'est le chemin de production : la severite n'est pas connue a la
+// declaration (elle vaut 'medium' par defaut), elle est posee au triage par
+// le HSE. L'escalade doit donc partir du triage, et non seulement d'une
+// insertion directe en 'critical' — sans quoi aucun danger grave n'escalade
+// jamais dans le flux reel.
+const CATEGORIE_CRITIQUE = '55555555-5555-4555-8555-555555555552';
+
+const declaration = await executerComme(
+  SALARIE_A,
+  `select (public.submit_safety_event(
+       'danger'::public.event_kind, '${SITE_A}'::uuid, '${ZONE_A}'::uuid, null, now(),
+       'Drilling machine guard removed during the maintenance of the gallery conveyor.',
+       'Maintenance of the gallery conveyor CV-12',
+       'Machine stopped and tagged out.'))->>'id' as id`,
+);
+
+let c06Ok = false;
+let c06Detail = declaration.ok ? '' : declaration.message;
+let evenementId = null;
+
+if (declaration.ok) {
+  evenementId = declaration.lignes[0].id;
+
+  // Tant que l'evenement n'est pas classe, aucune escalade ne doit exister.
+  const avantTriage = await executerComme(
+    HSE,
+    `select count(*)::int as total
+       from public.escalations
+      where event_id = '${evenementId}'::uuid`,
+  );
+
+  // Le triage est l'instant ou la severite devient 'critical'.
+  const triage = await executerComme(
+    HSE,
+    `select public.triage_safety_event(
+        '${evenementId}'::uuid,
+        '${CATEGORIE_CRITIQUE}'::uuid,
+        'critical'::public.severity_level,
+        'Danger critique confirme : carter de protection absent.')`,
+  );
+
+  const apres = await executerComme(
+    HSE,
+    `select
+       (select count(*)::int from public.escalations
+         where event_id = '${evenementId}'::uuid
+           and notified_user_id = '${HSE}'::uuid) as escalades,
+       (select count(*)::int from public.notifications
+         where event_id = '${evenementId}'::uuid
+           and user_id = '${HSE}'::uuid
+           and kind = 'critical_escalation'
+           and read_at is null) as notifications,
+       (select status from public.safety_events
+         where id = '${evenementId}'::uuid) as statut`,
+  );
+
+  if (!triage.ok) {
+    c06Detail = triage.message;
+  } else if (!apres.ok) {
+    c06Detail = apres.message;
+  } else {
+    const a = apres.lignes[0];
+    c06Ok =
+      avantTriage.ok &&
+      avantTriage.lignes[0].total === 0 &&
+      a.escalades === 1 &&
+      a.notifications === 1 &&
+      a.statut === 'escalated';
+    c06Detail = `${a.statut}, ${a.escalades} escalade(s), ${a.notifications} notification(s) non lue(s)`;
+  }
+}
+await enregistrer(
+  'C06 un danger classe critique au triage escalade et notifie le HSE',
+  c06Ok,
+  c06Detail,
+);
+
+// C07 — un re-triage ne duplique ni l'escalade, ni la notification, ni les
+// messages en file d'attente
+// L'e-mail est emis par destinataire (HSE, direction de site, administrateur)
+// : ce qui doit etre invariant, c'est le nombre de lignes avant et apres le
+// re-triage, pas un total absolu.
+const avantReTriage = await executerComme(
+  HSE,
+  `select
+     (select count(*)::int from public.escalations
+       where event_id = '${evenementId}'::uuid) as escalades,
+     (select count(*)::int from public.notifications
+       where event_id = '${evenementId}'::uuid
+         and kind = 'critical_escalation') as notifications,
+     (select status from public.safety_events
+       where id = '${evenementId}'::uuid) as statut`,
+);
+const emailsAvantReTriage = await executerComme(
+  ADMIN,
+  `select count(*)::int as total
+     from public.email_outbox
+    where template = 'critical_event_hse'
+      and payload->>'event_id' = '${evenementId}'::text`,
+);
+
+const reTriage = await executerComme(
+  HSE,
+  `select public.triage_safety_event(
+      '${evenementId}'::uuid,
+      '${CATEGORIE_CRITIQUE}'::uuid,
+      'critical'::public.severity_level,
+      'Re-classification : la criticite est confirmee.')`,
+);
+
+const apresReTriage = await executerComme(
+  HSE,
+  `select
+     (select count(*)::int from public.escalations
+       where event_id = '${evenementId}'::uuid) as escalades,
+     (select count(*)::int from public.notifications
+       where event_id = '${evenementId}'::uuid
+         and kind = 'critical_escalation') as notifications,
+     (select status from public.safety_events
+       where id = '${evenementId}'::uuid) as statut`,
+);
+// Les files d'attente ne sont lisibles que par un administrateur.
+const emailsApresReTriage = await executerComme(
+  ADMIN,
+  `select count(*)::int as total
+     from public.email_outbox
+    where template = 'critical_event_hse'
+      and payload->>'event_id' = '${evenementId}'::text`,
+);
+
+const avant = avantReTriage.ok ? avantReTriage.lignes[0] : null;
+const apres = apresReTriage.ok ? apresReTriage.lignes[0] : null;
+const emailsAvant = emailsAvantReTriage.ok ? emailsAvantReTriage.lignes[0].total : null;
+const emailsApres = emailsApresReTriage.ok ? emailsApresReTriage.lignes[0].total : null;
+
+await enregistrer(
+  'C07 un re-triage ne duplique ni escalade ni notification ni envoi',
+  reTriage.ok &&
+    avant !== null &&
+    apres !== null &&
+    emailsAvant !== null &&
+    emailsApres !== null &&
+    avant.escalades === 1 &&
+    apres.escalades === avant.escalades &&
+    avant.notifications === 1 &&
+    apres.notifications === avant.notifications &&
+    emailsApres === emailsAvant &&
+    apres.statut === 'escalated',
+  !reTriage.ok
+    ? reTriage.message
+    : !apresReTriage.ok
+      ? apresReTriage.message
+      : !emailsApresReTriage.ok
+        ? emailsApresReTriage.message
+        : `escalade(s) ${avant.escalades} -> ${apres.escalades}, notification(s) ${avant.notifications} -> ${apres.notifications}, e-mail(s) ${emailsAvant} -> ${emailsApres}, statut ${apres.statut}`,
 );
 
 // ── 5. Bilan ──────────────────────────────────────────────────────────────────

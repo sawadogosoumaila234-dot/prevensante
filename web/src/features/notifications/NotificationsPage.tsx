@@ -12,6 +12,7 @@ import { t } from '../../lib/i18n/en';
 /** Canal de diffusion deduit du `kind` de la notification (`notifications.kind`). */
 const NOTIFICATION_CHANNELS: Record<string, string> = {
   critical_event: 'In application + email',
+  critical_escalation: 'In application + email + SMS',
   new_event: 'In application',
   escalation: 'SMS + email',
   overdue_action: 'Email',

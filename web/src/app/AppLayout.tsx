@@ -5,6 +5,7 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import { t, type TranslationKey } from '../lib/i18n/en';
 import { ROLE_LABELS } from '../lib/i18n/labels';
 import { SPACE_BY_ROLE } from '../lib/session';
+import { formatUnreadCount, useUnreadNotifications } from '../lib/notifications/unread';
 import type { AppRole } from '../data/types';
 
 interface NavEntry {
@@ -74,6 +75,7 @@ const GROUP_LABELS: Record<NavEntry['group'], string> = {
 export function AppLayout() {
   const { user, signOut } = useSession();
   const location = useLocation();
+  const { unreadCount } = useUnreadNotifications(user?.id);
 
   const entries = useMemo(
     () => (user ? NAV.filter((entry) => entry.roles.includes(user.role)) : []),
@@ -118,7 +120,15 @@ export function AppLayout() {
         <span className="spacer" />
         <NavLink className="header-link" to="/notifications">
           <span aria-hidden="true">🔔</span>
-          <span className="visually-hidden">{t('nav.notifications')}</span>
+          {unreadCount > 0 ? (
+            <span className="count" aria-hidden="true">
+              {formatUnreadCount(unreadCount)}
+            </span>
+          ) : null}
+          <span className="visually-hidden">
+            {t('nav.notifications')}
+            {unreadCount > 0 ? ` (${unreadCount} unread)` : ''}
+          </span>
         </NavLink>
         <div className="user-chip">
           <span className="avatar" aria-hidden="true">
@@ -176,6 +186,11 @@ export function AppLayout() {
         <NavLink to="/notifications" className={({ isActive }) => (isActive ? 'active' : '')}>
           <span aria-hidden="true">🔔</span>
           {t('nav.notifications')}
+          {unreadCount > 0 ? (
+            <span className="count" aria-hidden="true">
+              {formatUnreadCount(unreadCount)}
+            </span>
+          ) : null}
         </NavLink>
       </nav>
 

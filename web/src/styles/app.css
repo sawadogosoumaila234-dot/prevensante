@@ -145,13 +145,15 @@ h4 {
   background: rgba(255, 255, 255, 0.12);
   text-decoration: none;
 }
-.header-link .count {
+.header-link .count,
+.bottom-nav .count {
   background: var(--color-accent);
   color: var(--text-on-accent);
   border-radius: var(--radius-pill);
   padding: 0 var(--space-2);
   font-size: var(--fs-12);
   font-weight: 700;
+  line-height: 1.6;
 }
 .user-chip {
   display: flex;
