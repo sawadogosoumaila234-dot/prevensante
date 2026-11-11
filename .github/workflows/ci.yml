@@ -14,7 +14,7 @@ jobs:
   validation:
     name: Typage, SQL et recette E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
 
     steps:
       - name: Récupérer le dépôt
@@ -80,23 +80,23 @@ jobs:
         working-directory: web
         run: |
           installe=0
-          for tentative in 1 2 3; do
-            echo "::group::Telechargement de Chromium (tentative $tentative/3)"
-            if npx playwright install chromium; then
+          for tentative in 1 2; do
+            echo "::group::Telechargement de Chromium (tentative $tentative/2)"
+            if timeout 240 npx playwright install chromium; then
               installe=1
               echo "::endgroup::"
               break
             fi
             echo "::endgroup::"
-            echo "Telechargement en echec — nouvel essai dans 20 s"
-            sleep 20
+            echo "Telechargement en echec ou trop long — nouvel essai dans 15 s"
+            sleep 15
           done
           if [ "$installe" -ne 1 ]; then
-            echo "Chromium indisponible apres 3 tentatives"
+            echo "Chromium indisponible apres 2 tentatives"
             exit 1
           fi
-          timeout 240 sudo apt-get update -y \
-            && timeout 420 npx playwright install-deps chromium \
+          timeout 120 sudo apt-get update -y \
+            && timeout 240 npx playwright install-deps chromium \
             || echo "Dependances systeme non installees — sans consequence pour la recette"
 
       # La recette s'exécute contre le build de production, pas contre le
