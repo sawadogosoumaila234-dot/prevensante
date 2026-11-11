@@ -65,27 +65,39 @@ jobs:
           npm run migrations:run
           npm run db:test
 
-      # L'installation de Chromium passe par apt, qui télécharge des paquets de
-      # polices depuis archive.ubuntu.com et security.ubuntu.com. Ces serveurs
-      # tombent regulierement, et le DNS du runner peut echouer temporairement
-      # ("Temporary failure resolving ..."). Un echec reseau ne doit pas
-      # bloquer la production : la recette est rejouee, et le deploiement ne
-      # part qu'elle est verte.
+      # Deux choses sont installees, et elles n'ont pas le meme importance.
+      #
+      # 1. Le navigateur lui-meme, telcharge depuis le CDN de Playwright :
+      #    c'est cela dont la recette a besoin. Le rejoue trois fois, parce
+      #    qu'un CDN peut etre momentanement injoignable.
+      #
+      # 2. Les dependances systeme (polices), via apt. Elles ne servent qu'au
+      #    confort des captures d'echec : la recette ne compare aucun rendu
+      #    d'ecran. Or apt depend entierement du DNS du runner, qui echoue
+      #    regulierement ("Temporary failure resolving archive.ubuntu.com").
+      #    On lui borne donc le temps, et son echec n'interrompt rien.
       - name: Installer Chromium pour Playwright
         working-directory: web
         run: |
+          installe=0
           for tentative in 1 2 3; do
-            echo "::group::Installation de Chromium (tentative $tentative/3)"
-            if sudo apt-get update -y && npx playwright install --with-deps chromium; then
+            echo "::group::Telechargement de Chromium (tentative $tentative/3)"
+            if npx playwright install chromium; then
+              installe=1
               echo "::endgroup::"
-              exit 0
+              break
             fi
             echo "::endgroup::"
-            echo "Installation en echec (tentative $tentative/3) — nouvel essai dans 30 s"
-            sleep 30
+            echo "Telechargement en echec — nouvel essai dans 20 s"
+            sleep 20
           done
-          echo "Installation de Chromium impossible apres 3 tentatives"
-          exit 1
+          if [ "$installe" -ne 1 ]; then
+            echo "Chromium indisponible apres 3 tentatives"
+            exit 1
+          fi
+          timeout 240 sudo apt-get update -y \
+            && timeout 420 npx playwright install-deps chromium \
+            || echo "Dependances systeme non installees — sans consequence pour la recette"
 
       # La recette s'exécute contre le build de production, pas contre le
       # serveur de développement : c'est la cible de la recette.
