@@ -65,9 +65,27 @@ jobs:
           npm run migrations:run
           npm run db:test
 
+      # L'installation de Chromium passe par apt, qui télécharge des paquets de
+      # polices depuis archive.ubuntu.com et security.ubuntu.com. Ces serveurs
+      # tombent regulierement, et le DNS du runner peut echouer temporairement
+      # ("Temporary failure resolving ..."). Un echec reseau ne doit pas
+      # bloquer la production : la recette est rejouee, et le deploiement ne
+      # part qu'elle est verte.
       - name: Installer Chromium pour Playwright
         working-directory: web
-        run: npx playwright install --with-deps chromium
+        run: |
+          for tentative in 1 2 3; do
+            echo "::group::Installation de Chromium (tentative $tentative/3)"
+            if sudo apt-get update -y && npx playwright install --with-deps chromium; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Installation en echec (tentative $tentative/3) — nouvel essai dans 30 s"
+            sleep 30
+          done
+          echo "Installation de Chromium impossible apres 3 tentatives"
+          exit 1
 
       # La recette s'exécute contre le build de production, pas contre le
       # serveur de développement : c'est la cible de la recette.
