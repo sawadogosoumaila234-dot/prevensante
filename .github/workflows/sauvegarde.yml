@@ -1,0 +1,56 @@
+name: Sauvegarde hebdomadaire
+
+# La decision A10 (hebergement et sauvegardes, validee le 02/11/2026) prévoit
+# un export hebdomadaire hors site, en complément de la sauvegarde quotidienne
+# automatique de la plateforme. Ce workflow le realise : il s'execute chaque
+# dimanche et peut aussi etre declenche a la main.
+#
+# Le dump part en artefact du depot (stockage GitHub, hors de l'hébergement
+# Supabase). Pour une copie de plus longue conservation, il reste a copier
+# l'artefact vers le stockage de l'entreprise — voir docs/DEPLOIEMENT.md.
+#
+# Secret attendu : SUPABASE_DB_URL (chaine de connexion de l'instance).
+# Il n'est requis que par ce workflow ; l'application n'en a pas besoin.
+on:
+  schedule:
+    # Chaque dimanche a 03:17 UTC (dimanche 04:17 en heure d'ete francaise).
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+
+concurrency:
+  group: sauvegarde-hebdomadaire
+  cancel-in-progress: false
+
+jobs:
+  sauvegarde:
+    name: Export hebdomadaire de la base
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Exporter la base
+        run: node tools/sauvegarde-base.mjs
+
+      - name: Publier le dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sauvegarde-prevensante
+          path: ~/.prevensante-sauvegardes
+          retention-days: 30
+          if-no-files-found: warn

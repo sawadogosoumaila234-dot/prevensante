@@ -86,34 +86,43 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-  # Rejeu de la meme recette contre l'instance Supabase de recette, ou la
-  # RLS est appliquee par PostgreSQL et non emulee dans le code.
+  # Verification de l'instance Supabase reelle a chaque push : c'est la que la
+  # RLS est appliquee par PostgreSQL, et non emulee dans le code.
   #
   # Le job est opt-in : il ne demarre que si la variable de depot
   # ENABLE_BASE_REELLE vaut "true" (Settings > Secrets and variables > Actions
-  # > Variables). Les deux secrets attendus sont VITE_SUPABASE_URL et
-  # VITE_SUPABASE_ANON_KEY (cle publique, deja exposee au navigateur).
+  # > Variables).
   #
-  # NE PAS L'ACTIVER TEL QUEL. La suite E2E adresse les enregistrements par
-  # les identifiants du jeu de demonstration (`act-3`, `evt-6`), alors que
-  # PostgreSQL les stocke sous forme d'UUID (`bbbbbbbb-0000-4000-8000-...`).
-  # Une route comme `/hse/actions/act-3/verify` ne resoudrait donc rien sur la
-  # base reelle. De plus, CR04 cloture l'action qu'il visite : le second
-  # passage la trouve deja fermee, et le rejeu n'est pas idempotent.
+  # Il joue `tools/verifier-base.mjs`, et non la suite E2E du navigateur. La
+  # suite E2E ne peut pas etre rejouee telle quelle sur la base reelle : elle
+  # adresse les enregistrements par les identifiants du jeu de demonstration
+  # (`act-3`, `evt-6`), alors que PostgreSQL les stocke sous forme d'UUID, et
+  # CR04 cloture l'action qu'il visite — le second passage la trouve deja
+  # fermee. Le rejeu n'est donc pas idempotent, et un echec y signalerait un
+  # defaut de test, pas un defaut de production.
   #
-  # Pour couvrir la base reelle, le controle dedie est
-  # `tools/verifier-base.mjs` : RLS, cloisonnement par site et preuve aal2 du
-  # second facteur. Porter la suite entiere vers la base reelle suppose
-  # d'abord de resoudre les identifiants par reference, et non par
-  # identifiant de demonstration.
-  recette-base-reelle:
-    name: Recette E2E sur la base Supabase de recette
+  # `verifier-base.mjs` est en revanche idempotent et en lecture seule : RLS,
+  # cloisonnement par site, isolement medical et preuve aal2 du second
+  # facteur. C'est le controle qui correspond a ce que joue la production.
+  #
+  # Secrets attendus :
+  #   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY  (cle publique, exposee au navigateur)
+  #   PREVENSANTE_WORKER_PASSWORD, PREVENSANTE_HSE_PASSWORD,
+  #   PREVENSANTE_MEDECIN_PASSWORD               (comptes de recette)
+  #   PREVENSANTE_HSE_MFA_SECRET, PREVENSANTE_MEDECIN_MFA_SECRET
+  verification-base-reelle:
+    name: Verification de la base Supabase reelle
     if: ${{ vars.ENABLE_BASE_REELLE == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      PREVENSANTE_WORKER_PASSWORD: ${{ secrets.PREVENSANTE_WORKER_PASSWORD }}
+      PREVENSANTE_HSE_PASSWORD: ${{ secrets.PREVENSANTE_HSE_PASSWORD }}
+      PREVENSANTE_MEDECIN_PASSWORD: ${{ secrets.PREVENSANTE_MEDECIN_PASSWORD }}
+      PREVENSANTE_HSE_MFA_SECRET: ${{ secrets.PREVENSANTE_HSE_MFA_SECRET }}
+      PREVENSANTE_MEDECIN_MFA_SECRET: ${{ secrets.PREVENSANTE_MEDECIN_MFA_SECRET }}
 
     steps:
       - name: Récupérer le dépôt
@@ -129,30 +138,68 @@ jobs:
             web/package-lock.json
 
       - name: Installer les dépendances
-        run: |
-          npm ci
-          npm --prefix web ci
+        run: npm ci
 
-      - name: Construire le front avec la configuration Supabase
-        run: |
-          npm --prefix web run typecheck
-          npm --prefix web run build
+      - name: Verifier l'instance reelle (RLS, second facteur, isolement medical)
+        run: node tools/verifier-base.mjs
 
-      - name: Installer Chromium pour Playwright
-        working-directory: web
-        run: npx playwright install --with-deps chromium
+  # Deploiement en production, automatiquement, a chaque push valide sur main.
+  #
+  # Ce job comble le trou qui faisait que « rien n'aboutissait » : le projet
+  # Vercel n'etait relie a aucun depot GitHub, un push ne mettait donc rien en
+  # ligne, et un deploiement refuse laissait l'ancienne version en service sans
+  # le dire (06/11/2026, « the commit author doesn't have permission to create
+  # deployments for this project »).
+  #
+  # Deux garde-fous :
+  #   - le job ne demarre que si la variable de depot DEPLOY_PRODUCTION vaut
+  #     "true" ;
+  #   - il se joue apres `validation`, donc jamais sur une recette en echec.
+  #
+  # Le deploiement passe par `--prebuilt` : un artefact construit par la CI ne
+  # porte pas de metadonnee git, et n'est donc pas refuse pour un auteur de
+  # commit different du compte Vercel.
+  deploiement:
+    name: Deploiement en production (Vercel)
+    if: ${{ vars.DEPLOY_PRODUCTION == 'true' }}
+    needs: validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: deploiement-production
+      cancel-in-progress: false
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Recette E2E sur la base réelle
-        working-directory: web
-        run: npx playwright test --reporter=list
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
 
-      - name: Publier le rapport de recette
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
         with:
-          name: rapport-recette-base-reelle
-          path: |
-            web/playwright-report
-            web/test-results
-          retention-days: 14
-          if-no-files-found: ignore
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: Installer la CLI Vercel
+        run: npm install --global vercel@latest
+
+      - name: Relier le depot au projet Vercel
+        run: |
+          vercel link --yes --project prevensante --scope sawadogosoumaila234-5698 --token "${{ secrets.VERCEL_TOKEN }}"
+
+      # Les variables VITE_* sont lues sur le projet Vercel et reinjectees dans
+      # le build. C'est la seule source de verite : les recopier a la main dans
+      # un secret de depot, c'est le piege du BOM (cf. docs/DEPLOIEMENT.md).
+      - name: Recuperer la configuration de production
+        run: vercel pull --yes --environment=production --token "${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Construire l'artefact de production
+        run: vercel build --prod --token "${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Deployer en production
+        run: vercel deploy --prebuilt --prod --token "${{ secrets.VERCEL_TOKEN }}"

@@ -657,17 +657,37 @@ Chaque migration doit avoir son script de rollback documenté. Avant toute corre
 Objectif : une copie hors du fournisseur d'hébergement, exploitable même si le compte Supabase
 principal est compromis.
 
+**L'export outillé (depuis le 11/11/2026).** Le dépôt contient l'outil qui produit cette copie.
+Il utilise la CLI Supabase embarquée, donc son propre `pg_dump` : **aucun conteneur n'est
+démarré**, contrairement à `supabase db dump` lancé sans `--db-url`.
+
 ```bash
-# Exemple de dump — à adapter au client pg de l'environnement
-pg_dump "$SUPABASE_DB_URL" --format=custom --file="prevensante-$(date +%F).dump"
+# Sur le poste d'exploitation
+npm run base:sauvegarder
+# la chaîne de connexion est lue dans SUPABASE_DB_URL, dans .env.sauvegarde.local,
+# ou passée en premier argument
+
+# En automatique, chaque dimanche à 03:17 UTC
+#   .github/workflows/sauvegarde.yml -> artefact du dépôt (30 jours de rétention)
 ```
+
+Le script produit un dump horodaté **hors du dépôt** (`%USERPROFILE%\prevensante-sauvegardes` par
+défaut) et un manifeste `.manifest.json` contenant l'empreinte SHA-256, la taille et le nombre de
+lignes. Il **refuse** tout dossier de sortie situé dans le dépôt : un dump contient les données
+métier et les comptes, il ne doit jamais pouvoir être commité par mégarde.
+
+> **Il reste une action** : renseigner la chaîne de connexion de l'instance dans le secret de dépôt
+> `SUPABASE_DB_URL` (secret GitHub) et, pour une conservation plus longue que 30 jours, copier
+> l'artefact vers le stockage de l'entreprise. Le paramètre `SUPABASE_DB_URL` n'est utilisé que par
+> ce workflow : l'application n'en a pas besoin.
 
 Contrôles de l'export :
 
 - [ ] Le fichier est chiffré au repos sur le stockage secondaire.
 - [ ] Le stockage secondaire est **physiquement et logiquement distinct** du compte principal.
 - [ ] L'accès au stockage est restreint et journalisé.
-- [ ] La taille de l'export est cohérente avec la taille de la base (contrôle de non-vidage).
+- [ ] La taille de l'export est cohérente avec la taille de la base (contrôle de non-vidage) —
+      le manifeste fournit la taille et l'empreinte à comparer d'un export à l'autre.
 - [ ] L'export est conservé selon la politique de conservation convenue.
 
 > **Modalités restant à confirmer par le commanditaire** (PRD section 7 et arbitrage A10) : durée de
@@ -739,6 +759,41 @@ La CI doit rejouer, sur chaque `push` et `pull_request` :
 > `db dump` sont proscrits). Sur un poste disposant de Docker, la séquence complète ci-dessus est
 > applicable ; sinon, s'appuyer sur un projet Supabase de recette lié et `supabase db push` +
 > `supabase test db` (pgTAP) contre ce projet.
+
+### 11.1 Ce que fait réellement la CI (état au 11/11/2026)
+
+Trois jobs, plus un quatrième sur cadence hebdomadaire :
+
+| Job | Déclencheur | Ce qu'il fait | Condition |
+|---|---|---|---|
+| `validation` | chaque `push` sur `main` | typage, build, audit des dépendances, tests du routeur, validation SQL (PGlite), recette E2E bureau + mobile | toujours |
+| `verification-base-reelle` | chaque `push` sur `main` | **instance réelle** : RLS, cloisonnement par site, isolement médical, preuve `aal2` du second facteur — en lecture seule | `ENABLE_BASE_REELLE = true` |
+| `deploiement` | après `validation` | **déploiement en production** sur Vercel | `DEPLOY_PRODUCTION = true` |
+| `sauvegarde` | dimanche 03:17 UTC | export hebdomadaire hors site | secret `SUPABASE_DB_URL` |
+
+**Pourquoi `verification-base-reelle` ne rejoue pas la suite E2E.** La suite E2E adresse les
+enregistrements par les identifiants du jeu de démonstration (`act-3`, `evt-6`), alors que
+PostgreSQL les stocke sous forme d'UUID : une route comme `/hse/actions/act-3/verify` ne résoudrait
+rien sur la base réelle. Et CR04 clôture l'action qu'il visite : le second passage la trouve déjà
+fermée. Le rejeu n'est donc pas idempotent, et un échec y signalerait un défaut de test, pas un
+défaut de production. `tools/verifier-base.mjs` est en revanche idempotent et en lecture seule :
+c'est le contrôle qui correspond à ce que joue la production.
+
+**Pourquoi le déploiement passe par `--prebuilt`.** Un artefact construit par la CI ne porte pas de
+métadonnée git, et n'est donc jamais refusé pour un auteur de commit différent du compte Vercel —
+c'est ce qui avait bloqué le déploiement du 06/11/2026.
+
+Secrets et variables du dépôt (Settings → Secrets and variables → Actions) :
+
+| Nom | Type | Rôle |
+|---|---|---|
+| `VERCEL_TOKEN` | secret | déploiement en production |
+| `ENABLE_BASE_REELLE` | variable (`true`) | active la vérification de l'instance réelle |
+| `DEPLOY_PRODUCTION` | variable (`true`) | active le déploiement automatique |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | secret | instance réelle (clé publique) |
+| `PREVENSANTE_WORKER_PASSWORD`, `PREVENSANTE_HSE_PASSWORD`, `PREVENSANTE_MEDECIN_PASSWORD` | secret | comptes de recette |
+| `PREVENSANTE_HSE_MFA_SECRET`, `PREVENSANTE_MEDECIN_MFA_SECRET` | secret | preuve `aal2` |
+| `SUPABASE_DB_URL` | secret | export hebdomadaire |
 
 ---
 

@@ -1,5 +1,5 @@
 // Contrôle sémantique croisé des migrations PrevEnSanté :
-//  - tables créées  vs tables référencées dans les politiques/索引 ;
+//  - tables créées  vs tables référencées dans les politiques/index ;
 //  - colonnes utilisées dans les politiques vs colonnes réellement créées ;
 //  - fonctions app.* appelées vs fonctions définies.
 // Aucun accès base : tout est lu dans les fichiers de migration.

@@ -65,6 +65,9 @@ Les deux serveurs peuvent tourner côte à côte : `npm run dev` (API, port 3000
 | `npm run db:test` | **Tests fonctionnels SQL** : RLS par rôle, triggers, garde-fous |
 | `npm run deploiement:verifier` | **Contrôle de la configuration Vercel** hors ligne (fichiers transmis, secrets, imports, repli SPA) |
 | `npm run base:publier -- --ref <project-ref>` | **Publication du schéma sur Supabase** : validation locale, `db push --dry-run`, puis application avec `--confirm`, et rapport horodaté |
+| `npm run base:verifier` | **Contrôle de l'instance réelle** : RLS, cloisonnement par site, isolement médical, preuve `aal2` du second facteur (lecture seule) |
+| `npm run base:sauvegarder` | **Export hebdomadaire hors site** de la base (dump + empreinte SHA-256 + manifeste) |
+| `npm run mfa:enroller` | **Enrôlement du second facteur** TOTP et preuve `aal2` sur les 5 rôles qui le portent |
 
 ### Front (`web/`)
 
@@ -191,18 +194,21 @@ génère une référence déjà utilisée et échoue.
 
 Projet lié : `sawadogosoumaila234-5698/prevensante` — **https://prevensante.vercel.app**
 
-> ⚠️ **État réel de ce qui est en ligne** : le seul déploiement **en production** (25/10/2026)
-> n'a traité que **10 fichiers** — la racine du dépôt. Le dossier `web/` n'existait pas encore,
-> donc **l'application React n'a jamais été déployée**. L'URL publique ne sert aujourd'hui que le
-> routeur API (`/` → « PrevEnSanté — socle applicatif opérationnel. »), et toute route
-> d'application répond 404.
+> ✅ **État vérifié le 11/11/2026** : l'application React **est** en ligne. Le déploiement en
+> production du 08/11/2026 sert le bundle `index-1lPOegWM.js` — le hash exact produit par le code
+> de `main` ; `/api/health` répond ; les variables `VITE_SUPABASE_URL` et
+> `VITE_SUPABASE_ANON_KEY` sont configurées pour Production, Preview et Development.
 >
-> **La configuration actuelle a été validée sur un déploiement réel** (28/10/2026) :
-> `https://prevensante-kiw0zikg1-sawadogosoumaila234-5698.vercel.app` (prévisualisation, protégée
-> par l'authentification Vercel). Le build passe, la SPA est servie, le repli sur route profonde
-> fonctionne et `/api/health` répond. Il reste à **déployer en production**, une fois la base
-> publiée (§ 2.4 du runbook) et les variables `VITE_*` configurées sur le projet Vercel — le
-> projet Vercel ne comporte **aucune** variable d'environnement aujourd'hui.
+> ⚠️ **Ce qui n'était pas fait, et qui a été corrigé le 11/11/2026** : le projet Vercel n'était
+> relié à **aucun dépôt GitHub**. Un push ne mettait donc rien en ligne, et un déploiement refusé
+> laissait l'ancienne version en service **sans le dire** — c'est exactement ce qui s'est produit
+> le 06/11/2026 (*« the commit author doesn't have permission to create deployments »*). Désormais,
+> le job `deploiement` de `.github/workflows/ci.yml` déploie en production **après chaque recette
+> verte**, à condition que la variable de dépôt `DEPLOY_PRODUCTION` vaille `true`.
+>
+> Le compte Vercel reste lié au projet par `VERCEL_TOKEN` (secret du dépôt). Le déploiement passe
+> par `--prebuilt` : un artefact construit par la CI ne porte pas de métadonnée git et n'est donc
+> jamais refusé pour un auteur de commit différent du compte Vercel.
 
 ```bash
 vercel whoami        # vérifier la session avant toute action

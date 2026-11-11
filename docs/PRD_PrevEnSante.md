@@ -47,15 +47,11 @@ Contribuer à la prévention des accidents de travail dans les secteurs industri
 
 ## 4. Secteurs d'activité concernés
 
-[Centre Launches Rs 5K Crore Scheme  To Push States For Mining Sector Reforms](https://images.openai.com/static-rsc-4/lxB-XvISD-ED9e0osHEjFdQiTbmE9Ay-2V9pmc7056ALtLa6Eo-WehRsHyTIwyirkHc_3dHWjpblUVl7o7jaQR85qyHcQ3s1ATeOkKcApY1x7AS6T88uMiPzWdi7gZrY_sXql17OtBV5vAT1oWEVvGw6IFCGEmAwnLqVtKJXHIs?purpose=inline)
-
 4.1. Mines et carrières
 
 Risques : éboulements, circulation d'engins, chutes de blocs, poussières, vibrations et opérations de forage.
 
 Fonctionnalités adaptées : signalement géolocalisé ou localisé par zone, suivi des équipements et remontée des dangers critiques.
-
-[セメント製造におけるロータリーキルンの役割は何ですか？製造における効率と品質の向上 - Kintek Furnace](https://images.openai.com/static-rsc-4/H8yWz9IQmj-K7cty51KAW_s3PQJZ_VKGyvywtWfbsKK0Wu60Ll8BnfJdYYVm89G59HCEXL7snU4WgzHQ2Pni8jOHtNZiWbZdYjXYkEXp8P2gOBnt9H-QknLUOSL7UYeqOLw9hy28MR-iJwH3NQdNd5I0aIjcYMi2uUm7MVi_E5o?purpose=inline)
 
 4.2. Cimenteries
 
@@ -69,23 +65,17 @@ Risques : coincements, coupures, brûlures, risques électriques, produits chimi
 
 Fonctionnalités adaptées : signalement par atelier ou machine, suivi des incidents et consultation des consignes adaptées au poste.
 
-[Workers pouring molten metal in foundry](https://images.openai.com/static-rsc-4/EOcxUHZUKHIc0ojPFOgVCZgqJ1Wt1S-DCt_fjOVP2twj7tvJVy31996PTJEhsaKqQm5O4Rr9XYMWTWdDjJVZXTjezJj4FZARM3yhxujnPReXc7Hw3p_twu3eOC39TTb3DQm7PnTw6k3x7N8cLdFnOU0WCzEo7_YU0ups9Phx737beDnZ7XgmZl0stOvASstR?purpose=inline)
-
 4.4. Industries métallurgiques
 
 Risques : chaleur extrême, projections, soudage, charges lourdes et fumées.
 
 Fonctionnalités adaptées : classification des dangers thermiques, signalement des équipements défectueux et suivi des mesures de protection.
 
-[Our Services | Freight Forwarding | Sea Freight | Air Freight | AGS Logistics Dubai, UAE](https://images.openai.com/static-rsc-4/um25PHbbQS3r4CSf7WR6SpzKRBcw3j0u8JThpG2PVMkhOOOFkENLmCEb3l_aSfPYmNOSigp_odPvmVQXqTr22IQbYcRVOimjV7lqYfJBG1M-vCzYlPieNemisM-zZYXexINGz_mwDzM9YqWguvQdusJdpam8XHFgcgs4rKTBr4c?purpose=inline)
-
 4.5. Entrepôts et logistique
 
 Risques : collisions, chutes de marchandises, circulation des chariots et manutention.
 
 Fonctionnalités adaptées : signalement des obstacles, suivi des zones dangereuses et prévention des collisions.
-
-[How to Implement Quality and Safety Control on Construction Site](https://images.openai.com/static-rsc-4/DbM6uPEWaYZlaihzT3hAY3hcxfb2KqXp7UgsUS83xY_jHMLE9bYalS65WvoLTVjeNUw2XeGRNZSxx5wudh6Nun3WdG0f7oscL-Vd-W-Ad7p8tqDNyzn_t4zyfv6V4qYq83cNOmEW1laMyx_as_KMBPQWRJFJmLWkir-qEPRuU1U?purpose=inline)
 
 4.6. Bâtiment et travaux publics
 

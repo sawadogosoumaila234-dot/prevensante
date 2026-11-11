@@ -1,7 +1,7 @@
 # Ce qu'il vous reste à décider — PrevEnSanté
 
 > Document de travail à l'usage du commanditaire. Une page, deux cases, aucune ligne de code.
-> Version du 02/11/2026 — **les cinq arbitrages sont validés** (décision du 02/11/2026).
+> Version du 11/11/2026 — **les cinq arbitrages sont validés** (décision du 02/11/2026).
 
 ---
 
@@ -9,14 +9,21 @@
 
 | | |
 |---|---|
-| L'application | Elle est **en ligne** : https://prevensante.vercel.app |
-| La base de données | Elle est **publiée** sur l'instance Supabase `prevensante`, 21 migrations, 13 contrôles de sécurité réussis |
-| Les tests | 28 tests automatiques, 27 contrôles SQL, 50 tests navigateur, 0 vulnérabilité |
+| L'application | Elle est **en ligne** : https://prevensante.vercel.app — vérification du 11/11/2026 |
+| La base de données | Elle est **publiée** sur l'instance Supabase `prevensante`, 22 migrations, **15 contrôles sur l'instance réelle : 15 réussis, 0 échec** |
+| Les tests | 34 tests du routeur, 27 contrôles SQL, recette navigateur bureau + mobile, 0 vulnérabilité |
+| Le second facteur | Il est **enrôlé et prouvé** (`aal2`) sur les 5 rôles qui le portent : HSE, médecin du travail, administrateur, directeur de site, superviseur |
 | Ce que je peux faire | Tout ce qui est technique — c'est fait |
-| Ce qu'il vous reste | **2 cases** : nommer les personnes, signer |
+| Ce qu'il vous reste | **2 cases** : nommer les personnes, fixer 3 paramètres d'exploitation |
 
 **En clair : il n'y a plus de travail d'ingénierie.** Ce qui reste, ce sont des noms à écrire et
-une signature.
+trois paramètres d'exploitation. Le PV est signé depuis le 05/11/2026, sans réserve.
+
+> **Ce qui a été rattrapé le 11/11/2026.** Le projet Vercel n'était relié à aucun dépôt GitHub :
+> un push ne mettait rien en ligne, et un déploiement refusé laissait l'ancienne version en
+> service sans le dire. C'est le sentiment de « ça n'aboutit pas ». Le déploiement en production
+> est désormais **automatique** après chaque recette verte, et l'instance réelle est **contrôlée
+> à chaque push** au lieu de l'être seulement à la main.
 
 ---
 
@@ -144,24 +151,24 @@ HSE, médecin du travail, directeur de site et administrateur.
 
 - Personnes concernées : ______________________________
 
-> *Ce que la technique peut déjà vous donner (relevé sur l'instance le 02/11/2026,
-> `node tools/tableau-habilitations.mjs`) :*
+> *Ce que la technique peut déjà vous donner (relevé sur l'instance le 11/11/2026,
+> `node tools/verifier-base.mjs` et `node tools/enroller-mfa.mjs --verifier`) :*
 
 | Compte | Rôle | Site | Double facteur | Dossiers médicaux |
 |---|---|---|---|---|
-| HSE | `hse_officer` | Usine de Soumbo (SMB) — site pilote | **non enrôlé** | non |
-| Médecin du travail | `occupational_physician` | Usine de Soumbo (SMB) — site pilote | **non enrôlé** | oui |
-| Administrateur | `admin` | Usine de Soumbo (SMB) — site pilote | **non enrôlé** | oui |
-| Encadrement (directeur de site) | `site_director` | Usine de Soumbo (SMB) — site pilote | **non enrôlé** | non |
-| Superviseur | `supervisor` | Usine de Soumbo (SMB) — site pilote | **non enrôlé** | non |
-| Salarié site A | `worker` | Usine de Soumbo (SMB) — site pilote | **non enrôlé** | non |
-| Salarié site B | `worker` | Usine de Koudougou (KDG) | **non enrôlé** | non |
-| Salarié sans site | `worker` | aucun site | **non enrôlé** | non |
+| HSE | `hse_officer` | Usine de Soumbo (SMB) — site pilote | **enrôlé — session `aal2` prouvée** | non |
+| Médecin du travail | `occupational_physician` | Usine de Soumbo (SMB) — site pilote | **enrôlé — session `aal2` prouvée** | oui |
+| Administrateur | `admin` | Usine de Soumbo (SMB) — site pilote | **enrôlé — session `aal2` prouvée** | oui |
+| Encadrement (directeur de site) | `site_director` | Usine de Soumbo (SMB) — site pilote | **enrôlé — session `aal2` prouvée** | non |
+| Superviseur | `supervisor` | Usine de Soumbo (SMB) — site pilote | **enrôlé — session `aal2` prouvée** | non |
+| Salarié site A | `worker` | Usine de Soumbo (SMB) — site pilote | non requis | non |
+| Salarié site B | `worker` | Usine de Koudougou (KDG) | non requis | non |
+| Salarié sans site | `worker` | aucun site | non requis | non |
 
-> Deux choses à faire, et aucune ne demande de code : **nommer les personnes** qui tiendront ces
-> rôles sur le site pilote, et **enrôler le double facteur** sur les quatre rôles concernés
-> (HSE, médecin du travail, directeur de site, administrateur) — il n'est actif sur aucun compte
-> aujourd'hui. Je peux enrôler le MFA sur les comptes que vous me désignez : dites-moi lesquels.
+> **Il ne reste donc qu'une chose à faire, et elle ne demande aucun code : nommer les personnes**
+> qui tiendront ces rôles sur le site pilote. Le double facteur est déjà en place et vérifié :
+> `node tools/enroller-mfa.mjs --verifier` rejoue le challenge TOTP et relit le niveau
+> d'authentification obtenu par l'API — il affiche `aal2` sur les cinq rôles.
 
 **6b — Le périmètre pilote est confirmé : un seul site.**
 
@@ -186,8 +193,9 @@ pas attendu pour ce pilote et ne bloque pas la clôture.
 
 **6e — Signature du procès-verbal.**
 
-- Commanditaire — nom, qualité : ____________________  Date : ____________
-- Signature : ____________________
+- [x] **Faite le 05/11/2026** — visa électronique apposé par SAWADOGO Soumaila, Commanditaire, sur
+  les sept critères (CR01 à CR07) et sur la décision de clôture du § 4. **Aucune réserve.**
+  *(§ 7 du PV, `docs/PV-RECETTE.md`.)*
 
 ---
 
@@ -202,14 +210,30 @@ Chaque case du § 7 du procès-verbal correspond à l'une des décisions ci-dess
 lui-même se trouve dans `docs/PV-RECETTE.md`, et la fiche technique détaillée des arbitrages dans
 `docs/ARBITRAGES.md`.
 
+## Ce qui a été fait le 11/11/2026
+
+Un audit de l'état réel, puis quatre corrections. Le détail est dans
+`docs/ETAT-2026-11-11.md`.
+
+- **Déploiement automatique** : le projet Vercel n'était relié à aucun dépôt GitHub. Le job
+  `deploiement` de la CI met désormais la production à jour après chaque recette verte.
+- **Instance réelle contrôlée à chaque push** : le job de vérification remplace la recette E2E
+  sur base réelle, qui n'était pas rejouable (identifiants de démonstration, et CR04 qui clôture
+  l'action qu'il visite). Le contrôle réel est idempotent et en lecture seule.
+- **Export hebdomadaire hors site** : il n'était outillé, donc pas fait. L'outil et le workflow
+  planifié existent ; il reste à renseigner la chaîne de connexion de l'instance.
+- **Documents** : le README annonçait encore que l'application n'avait jamais été déployée — c'était
+  faux depuis le 28/10/2026.
+
 ---
 
 ## Qui fait quoi maintenant
 
 | Qui | Quoi | Délai |
 |---|---|---|
-| Vous | Nommer les personnes (6a) et signer (6e) | votre convenance |
-| Moi | Enrôler le double facteur sur les comptes que vous désignez, puis vous rendre le PV signé prêt à archiver | dès que vous me dites lesquels |
+| Vous | Nommer les personnes qui tiendront les rôles du site pilote (6a) | votre convenance |
+| Vous | Fixer les 3 paramètres d'exploitation : durée de conservation des sauvegardes, responsable de l'exploitation, responsable du test de restauration (§ 5) | votre convenance |
+| Moi | Enregistrer la chaîne de connexion de l'instance (`SUPABASE_DB_URL`) pour activer l'export hebdomadaire automatique | dès que vous me la communiquez |
 
 **Moi, je peux tout refaire techniquement** : si vous changez d'avis sur une règle, j'applique la
 modification, je rejoue les tests, je redéploie et je mets à jour le PV.

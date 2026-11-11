@@ -20,7 +20,10 @@
     "migrations:colonnes": "node tools/colonnes-migrations.mjs",
     "db:test": "node tools/test-fonctionnel.mjs",
     "deploiement:verifier": "node tools/verifier-deploiement.mjs",
-    "base:publier": "node tools/publier-base.mjs"
+    "base:publier": "node tools/publier-base.mjs",
+    "base:verifier": "node tools/verifier-base.mjs",
+    "base:sauvegarder": "node tools/sauvegarde-base.mjs",
+    "mfa:enroller": "node tools/enroller-mfa.mjs"
   },
   "keywords": [],
   "license": "UNLICENSED",
