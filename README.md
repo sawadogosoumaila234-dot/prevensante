@@ -68,6 +68,7 @@ Les deux serveurs peuvent tourner côte à côte : `npm run dev` (API, port 3000
 | `npm run base:verifier` | **Contrôle de l'instance réelle** : RLS, cloisonnement par site, isolement médical, preuve `aal2` du second facteur (lecture seule) |
 | `npm run base:sauvegarder` | **Export hebdomadaire hors site** de la base (dump + empreinte SHA-256 + manifeste) |
 | `npm run mfa:enroller` | **Enrôlement du second facteur** TOTP et preuve `aal2` sur les 5 rôles qui le portent |
+| `npm run habilitations:maj` | **Écriture des noms des personnes** du site pilote (simulation par défaut, refus si un nom manque) |
 
 ### Front (`web/`)
 

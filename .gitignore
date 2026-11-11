@@ -37,3 +37,7 @@ Thumbs.db
 # qui correspond gagne. Sans elle, le '.env*' ajouté par Vercel ignore aussi
 # le modèle .env.example, qui doit rester versionné.
 !.env.example
+
+# Idem pour le modèle du lot d'habilitations : il ne contient que des noms
+# d'exemple, et doit rester versionné pour servir de gabarit.
+!.env.habilitations.example

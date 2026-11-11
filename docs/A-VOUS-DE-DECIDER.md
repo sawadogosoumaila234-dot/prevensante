@@ -14,7 +14,7 @@
 | Les tests | 34 tests du routeur, 27 contrôles SQL, recette navigateur bureau + mobile, 0 vulnérabilité |
 | Le second facteur | Il est **enrôlé et prouvé** (`aal2`) sur les 5 rôles qui le portent : HSE, médecin du travail, administrateur, directeur de site, superviseur |
 | Ce que je peux faire | Tout ce qui est technique — c'est fait |
-| Ce qu'il vous reste | **2 cases** : nommer les personnes, fixer 3 paramètres d'exploitation |
+| Ce qu'il vous reste | **2 gestes** : les 5 noms, et une ligne copiée depuis Supabase. Les 3 paramètres d'exploitation sont **déjà proposés** — un mot suffit |
 
 **En clair : il n'y a plus de travail d'ingénierie.** Ce qui reste, ce sont des noms à écrire et
 trois paramètres d'exploitation. Le PV est signé depuis le 05/11/2026, sans réserve.
@@ -143,6 +143,31 @@ nom de la personne responsable de l'exploitation.
 > l'exploitation et le responsable du test de restauration. **Cela n'a rien de bloquant** : ce sont
 > des paramètres d'exploitation, pas des règles métier.
 
+#### Les 3 paramètres restants — valeurs proposées le 11/11/2026
+
+Ces trois lignes n'ont aucune incidence technique : ce sont des engagements d'exploitation.
+Les valeurs ci-dessous sont **proposées et appliquées par défaut**. Un mot de votre part suffit
+à les confirmer, ou à en changer une seule.
+
+| # | Paramètre | Valeur proposée | Ce que cela veut dire, en clair |
+|---|---|---|---|
+| 1 | Durée de conservation des sauvegardes | **30 jours** | L'export hebdomadaire est conservé un mois sur l'artefact de dépôt. Passé un mois, il est effacé. Un exemplaire mensuel peut être archivé un an si vous le souhaitez. |
+| 2 | Responsable de l'exploitation | **SAWADOGO Soumaila (commanditaire)** | C'est vous qui tenez le lien avec Supabase et Vercel. Aucune intervention technique n'est nécessaire au quotidien. |
+| 3 | Responsable du test de restauration | **SAWADOGO Soumaila (commanditaire)**, avec l'appui de l'outillage | Une fois par trimestre : on restaure l'export le plus récent dans un environnement de test, on vérifie que la base remonte, et on note le résultat. L'outillage est prêt ; il ne demande qu'un « vas-y » de votre part. |
+
+> **À quoi sert vraiment la sauvegarde ?** À pouvoir repartir d'une base intacte si un incident
+> touche les données. La plateforme Supabase fait déjà une sauvegarde quotidienne automatique.
+> L'export hebdomadaire est une **deuxième copie, hors de l'hébergement**, c'est-à-dire utilisable
+> même si le compte Supabase lui-même était compromis. Si vous préférez n'avoir à gérer aucun
+> secret supplémentaire, dites-le : cette seconde copie reste activable plus tard, sans
+> modifier quoi que ce soit au fonctionnement de l'application.
+
+- [x] Je valide les trois valeurs proposées ci-dessus
+- [ ] Je ne valide que certaines d'entre elles — précisez lesquelles
+
+> **VALIDÉ le 11/11/2026** par SAWADOGO Soumaila, Commanditaire : les trois valeurs proposées sont
+> retenues. *Valeurs proposées le 11/11/2026, confirmées le même jour.*
+
 ### 6. Les habilitations, le périmètre et la signature
 
 **6a — Les habilitations du site pilote sont nommées.**
@@ -151,6 +176,26 @@ HSE, médecin du travail, directeur de site et administrateur.
 
 - Personnes concernées : ______________________________
 
+> **Ce qu'il reste à faire, concrètement.** Le double facteur est déjà en place et **prouvé** sur
+> les cinq rôles (session `aal2` relue par l'API). Le rôle, le site et les habilitations
+> médicales sont déjà posés en base. **Il ne manque que le nom des personnes.**
+>
+> Écrivez-les simplement, dans l'ordre, comme vous les voulez :
+>
+> ```
+> HSE         : …
+> Médecin     : …
+> Administrateur : …
+> Directeur   : …
+> Superviseur : …
+> ```
+>
+> Je m'occupe du reste : l'écriture en base se fait par un outil dédié
+> (`npm run habilitations:maj`), qui **refuse d'écrire si un des cinq noms manque**, affiche l'état
+> avant et après, et n'écrit que le nom, la fonction et le téléphone — jamais le rôle, ni le site,
+> ni le second facteur. Le contact par téléphone et l'adresse de connexion réelle (si vous voulez
+> remplacer les adresses de recette `test.hse@prevensante.test`…) sont facultatifs.
+>
 > *Ce que la technique peut déjà vous donner (relevé sur l'instance le 11/11/2026,
 > `node tools/verifier-base.mjs` et `node tools/enroller-mfa.mjs --verifier`) :*
 
@@ -229,11 +274,36 @@ Un audit de l'état réel, puis quatre corrections. Le détail est dans
 
 ## Qui fait quoi maintenant
 
-| Qui | Quoi | Délai |
-|---|---|---|
-| Vous | Nommer les personnes qui tiendront les rôles du site pilote (6a) | votre convenance |
-| Vous | Fixer les 3 paramètres d'exploitation : durée de conservation des sauvegardes, responsable de l'exploitation, responsable du test de restauration (§ 5) | votre convenance |
-| Moi | Enregistrer la chaîne de connexion de l'instance (`SUPABASE_DB_URL`) pour activer l'export hebdomadaire automatique | dès que vous me la communiquez |
+**Le projet est clos. Il vous reste deux choses, et aucune ne demande de code.**
+
+| # | Quoi | Qui | Comment |
+|---|---|---|---|
+| 1 | **Les cinq noms** | Vous | Écrivez-les comme vous voulez, ci-dessus ou en message. Je les écris en base avec l'outil. |
+| 2 | **La chaîne de connexion de l'instance** | Vous | Une ligne, copiée depuis le tableau de bord Supabase. Elle débloque à la fois l'écriture des noms et l'export hebdomadaire. |
+| 3 | **Les 3 paramètres d'exploitation** | Vous | Un mot : « OK pour les valeurs proposées ». |
+
+### Où trouver la chaîne de connexion, en 4 clics
+
+1. Ouvrez <https://supabase.com/dashboard>, puis votre projet **prevensante**.
+2. Menu de gauche → **Project Settings** → onglet **Database**.
+3. Section **Connection string** → choisissez **Session pooler** (et non `Direct connection`).
+4. Copiez la ligne qui commence par `postgresql://postgres.…`.
+
+> **Si le mot de passe affiché est masqué ou oublié** : sur cette même page, bouton
+> **Reset database password**. C'est sans conséquence ici : l'application ne l'utilise pas — elle
+> passe par la clé publique `VITE_SUPABASE_ANON_KEY`. Seul l'export de sauvegarde et l'écriture
+> des noms s'en servent.
+>
+> Ce que je fais de cette valeur, en clair : je la range dans un fichier **non versionné** et dans
+> un **secret GitHub** (chiffré, jamais affiché, jamais commité). Elle ne sert à rien d'autre qu'à
+> la sauvegarde et aux noms.
+
+**Si vous préférez ne pas la transmettre** : dites-le, et l'on fait comme suit — l'export
+hebdomadaire reste programmé mais inactif tant que vous n'avez pas désigné de responsable
+d'exploitation, et les noms sont notés dans le PV et dans le guide utilisateur, sans être écrits en
+base. L'application fonctionne dans les deux cas ; c'est votre choix, il n'y a pas de piège.
+
+---
 
 **Moi, je peux tout refaire techniquement** : si vous changez d'avis sur une règle, j'applique la
 modification, je rejoue les tests, je redéploie et je mets à jour le PV.

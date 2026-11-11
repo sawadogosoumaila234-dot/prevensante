@@ -23,7 +23,8 @@
     "base:publier": "node tools/publier-base.mjs",
     "base:verifier": "node tools/verifier-base.mjs",
     "base:sauvegarder": "node tools/sauvegarde-base.mjs",
-    "mfa:enroller": "node tools/enroller-mfa.mjs"
+    "mfa:enroller": "node tools/enroller-mfa.mjs",
+    "habilitations:maj": "node tools/maj-habilitations.mjs"
   },
   "keywords": [],
   "license": "UNLICENSED",
@@ -31,6 +32,7 @@
     "@electric-sql/pglite": "^0.5.11",
     "@electric-sql/pglite-pgvector": "^0.0.12",
     "@electric-sql/pglite-postgis": "^0.2.11",
+    "pg": "^8.23.1",
     "pgsql-parser": "^18.3.1",
     "supabase": "2.122.0"
   },

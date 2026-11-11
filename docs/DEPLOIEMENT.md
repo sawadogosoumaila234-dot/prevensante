@@ -681,6 +681,39 @@ métier et les comptes, il ne doit jamais pouvoir être commité par mégarde.
 > l'artefact vers le stockage de l'entreprise. Le paramètre `SUPABASE_DB_URL` n'est utilisé que par
 > ce workflow : l'application n'en a pas besoin.
 
+### 9.3 Nommer les personnes du site pilote
+
+Le PV de recette (§ 7) exige que chaque rôle qui porte la charge soit **nommé**, avec son rôle,
+son site et son double facteur. Rôle, site et second facteur sont déjà posés et prouvés ; il ne
+reste que le nom.
+
+L'écriture se fait par un outil dédié, qui ne touche qu'au nom, à la fonction et au téléphone :
+
+```bash
+# 1. Le lot d'habilitations — fichier hors dépôt, jamais versionné
+cp .env.habilitations.example .env.habilitations.local
+#    (à compléter : les cinq rôles du site pilote)
+
+# 2. Relire ce qui va changer
+node tools/maj-habilitations.mjs --simulation
+
+# 3. Écrire
+node tools/maj-habilitations.mjs --appliquer
+```
+
+Garde-fous de l'outil :
+
+- il **refuse d'écrire** si l'un des cinq rôles n'est pas nommé ;
+- il **n'écrit jamais** le rôle, le site ni le second facteur — il ne fait que nommer ;
+- il refuse d'écrire si plusieurs profils portent le même rôle sur le site pilote ;
+- il **relit et affiche** l'état avant et après, dans une transaction (`begin` / `rollback` en
+  simulation) ;
+- le mot de passe de la connexion n'apparaît jamais dans la sortie.
+
+> Les adresses de connexion des comptes de recette (`test.hse@prevensante.test`…) peuvent être
+> remplacées par les adresses réelles des personnes : le champ `email` du lot est prévu pour cela.
+> Le second facteur est lié au compte, pas à l'adresse : il reste actif après le changement.
+
 Contrôles de l'export :
 
 - [ ] Le fichier est chiffré au repos sur le stockage secondaire.
