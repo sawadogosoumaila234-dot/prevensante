@@ -28,7 +28,7 @@
 // les regles du projet interdisent.
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -138,18 +138,50 @@ console.log(`  instance   : ${masquerUrl(url)}`);
 console.log(`  contenu    : ${suffixe}`);
 console.log(`  destination: ${fichier}`);
 
-const argumentsDump = ['db', 'dump', '--db-url', url, '--file', fichier];
-if (dataOnly) argumentsDump.push('--data-only');
-
 console.log('\n  Export en cours…\n');
 try {
-  const { stdout, stderr } = await execFileAsync(process.execPath, [binaire, ...argumentsDump], {
-    cwd: RACINE,
-    maxBuffer: 32 * 1024 * 1024,
-    windowsHide: true,
-  });
-  if (stdout?.trim()) console.log(stdout.trim());
-  if (stderr?.trim()) console.error(stderr.trim());
+  // Deux exports, toujours : la structure d'un cote, les donnees de l'autre.
+  //
+  // Constat du 12/11/2026 : `supabase db dump --db-url` ne produit que la
+  // structure — le fichier obtenu ne contenait ni une seule ligne de donnees
+  // (aucun bloc COPY, aucun INSERT). Une sauvegarde sans les donnees ne sert
+  // a rien le jour ou la base est a reconstruire. La CLI est donc appelee deux
+  // fois : une fois pour la structure, une fois pour les donnees, et les deux
+  // fichiers sont reunis en un seul dump restaurable.
+  const fichiers = [];
+  const dumps = dataOnly ? [['donnees', ['--data-only']]] : schemaOnly
+    ? [['schema', []]]
+    : [
+        ['schema', []],
+        ['donnees', ['--data-only']],
+      ];
+
+  for (const [nom, options] of dumps) {
+    const cible = dumps.length === 1 ? fichier : join(dossier, `prevensante-${horodatage}-${nom}.sql`);
+    const { stdout, stderr } = await execFileAsync(
+      process.execPath,
+      [binaire, 'db', 'dump', '--db-url', url, '--file', cible, ...options],
+      {
+        cwd: RACINE,
+        maxBuffer: 32 * 1024 * 1024,
+        windowsHide: true,
+      },
+    );
+    if (stdout?.trim()) console.log(stdout.trim());
+    if (stderr?.trim()) console.error(stderr.trim());
+    if (!existsSync(cible)) {
+      throw new Error(`la CLI n'a produit aucun fichier pour l'export « ${nom} »`);
+    }
+    fichiers.push(cible);
+  }
+
+  if (fichiers.length > 1) {
+    const parties = fichiers.map((f) => readFileSync(f, 'utf8'));
+    writeFileSync(fichier, parties.join('\n\n'), 'utf8');
+    for (const f of fichiers) {
+      if (f !== fichier) unlinkSync(f);
+    }
+  }
 } catch (e) {
   const sortie = `${e?.stdout ?? ''}\n${e?.stderr ?? ''}`;
   if (/docker: command not found|podman also not found/i.test(sortie)) {
@@ -226,6 +258,23 @@ if (schemaOnly) {
   }
   writeFileSync(fichier, structure, 'utf8');
   console.log('\n  Export de structure : donnees retirees, structure conservee.');
+}
+
+// Un export « complet » qui ne contiendrait aucune donnee ne permettrait pas de
+// reconstruire la base : il est donc refuse, plutot que publie en silence.
+if (!schemaOnly && !dataOnly) {
+  const dump = readFileSync(fichier, 'utf8');
+  const contientDonnees = /^COPY\s/im.test(dump) || /^INSERT INTO\s/im.test(dump);
+  if (!contientDonnees) {
+    console.error('');
+    console.error('  ECHEC : export sans aucune donnee.');
+    console.error('  Une sauvegarde sans les lignes de la base ne sert a rien le jour');
+    console.error('  ou la base est a reconstruire : elle est refusee, pas publiee.');
+    process.exit(1);
+  }
+  const tables = new Set([...dump.matchAll(/^COPY\s+([\w".]+)\./gim)].map((m) => m[1]));
+  console.log('');
+  console.log(`  Export complet : structure et donnees reunies (${tables.size} table(s) peuplees).`);
 }
 
 const contenu = readFileSync(fichier);
