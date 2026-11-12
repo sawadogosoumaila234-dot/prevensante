@@ -14,10 +14,10 @@
 | Les tests | 34 tests du routeur, 27 contrôles SQL, recette navigateur bureau + mobile, 0 vulnérabilité |
 | Le second facteur | Il est **enrôlé et prouvé** (`aal2`) sur les 5 rôles qui le portent : HSE, médecin du travail, administrateur, directeur de site, superviseur |
 | Ce que je peux faire | Tout ce qui est technique — c'est fait |
-| Ce qu'il vous reste | **2 gestes** : les 5 noms, et une ligne copiée depuis Supabase. Les 3 paramètres d'exploitation sont **déjà proposés** — un mot suffit |
+| Ce qu'il vous reste | **1 geste** : les 5 noms. Les 3 paramètres d'exploitation sont validés, et la chaîne de connexion n'est **plus à transmettre** (elle est retrouvée automatiquement, et une voie sans chaîne est éprouvée) |
 
-**En clair : il n'y a plus de travail d'ingénierie.** Ce qui reste, ce sont des noms à écrire et
-trois paramètres d'exploitation. Le PV est signé depuis le 05/11/2026, sans réserve.
+**En clair : il n'y a plus de travail d'ingénierie.** Ce qui reste, ce sont des noms à écrire.
+Le PV est signé depuis le 05/11/2026, sans réserve.
 
 > **Ce qui a été rattrapé le 11/11/2026.** Le projet Vercel n'était relié à aucun dépôt GitHub :
 > un push ne mettait rien en ligne, et un déploiement refusé laissait l'ancienne version en
@@ -189,6 +189,18 @@ HSE, médecin du travail, directeur de site et administrateur.
 > Directeur   : …
 > Superviseur : …
 > ```
+>
+> **Plus rien à copier, plus rien à transmettre.** La question de la chaîne de connexion est
+> réglée : elle est **déjà sur la machine**, dans un fichier local jamais envoyé sur le serveur,
+> et les outils la retrouvent toute seule. Deux voies ont été éprouvées le 12/11/2026 :
+>
+> | Voie | Ce qu'elle utilise | État |
+> |---|---|---|
+> | `npm run habilitations:maj` | la chaîne de connexion, retrouvée automatiquement dans `supabase/.env.local` | **éprouvée** — simulation et écriture validées |
+> | `npm run habilitations:maj:api` | **rien** : ni chaîne, ni mot de passe de base — seulement la clé publique et le compte administrateur de l'application | **éprouvée** — écriture réelle, relue par la personne concernée, puis restaurée (`npm run habilitations:preuve`) |
+>
+> Dans les deux cas, **l'application se comporte exactement de la même façon** : elle lit les noms
+> dans `public.profiles`, et c'est la seule table qu'elle consulte pour afficher un nom.
 >
 > Je m'occupe du reste : l'écriture en base se fait par un outil dédié
 > (`npm run habilitations:maj`), qui **refuse d'écrire si un des cinq noms manque**, affiche l'état

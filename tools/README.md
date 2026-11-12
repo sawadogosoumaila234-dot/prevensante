@@ -227,3 +227,62 @@ Options :
 | `--rapport <fichier>` | Chemin du rapport |
 | `--ecriture-env` | Écrit `web/.env.local` (URL + clé `anon`) pour que le front bascule sur la base réelle |
 | `--e2e` | Ajoute la recette Playwright à la phase A |
+
+---
+
+## 3. Nommer les personnes du site pilote
+
+| Outil | Ce qu'il fait | Dépendance |
+|---|---|---|
+| `chain-connexion.mjs` | Module commun : **retrouve** la chaîne de connexion dans les fichiers locaux, et la prépare pour `pg`. | aucun |
+| `maj-habilitations.mjs` | Écrit les 5 noms (nom, fonction, téléphone) en SQL direct, et écrit aussi le nom dans `auth.users`. | `pg` + chaîne de connexion |
+| `maj-habilitations-api.mjs` | Écrit les 5 noms **par l'API de l'application** : ni chaîne de connexion, ni mot de passe de base. | `@supabase/supabase-js` + clé publique + compte administrateur |
+| `preuve-ecriture-habilitations.mjs` | **Preuve réversible** : écrit un nom temporaire, vérifie que la personne concernée le voit dans l'application, puis restaure le nom d'origine. | idem |
+
+### Pourquoi deux voies
+
+La voie SQL est la plus complète : elle touche aussi `auth.users` (le nom de doublon
+et, en option, l'adresse de connexion). La voie API n'a besoin d'aucun secret de base :
+elle passe par la clé publique et le mot de passe du compte administrateur, et écrit
+dans `public.profiles` — la seule table que l'application consulte pour afficher un nom
+(aucune occurrence de `user_metadata` dans `web/src`).
+
+Dans les deux cas, **le résultat visible dans l'application est identique**.
+
+### `chain-connexion.mjs`
+
+La chaîne de connexion n'est jamais demandée à l'opérateur. Elle est cherchée, dans
+l'ordre : l'environnement (`SUPABASE_DB_URL`), `.env.sauvegarde.local`,
+`supabase/.env.local`, puis la ligne de commande. Ces fichiers sont ignorés par git
+(`.gitignore`) et exclus du déploiement (`.vercelignore`).
+
+Le module corrige aussi un piège réel : la chaîne contient `?sslmode=require`, que les
+versions récentes de `pg` traitent comme un alias de `verify-full`. La connexion échoue
+alors sur « self-signed certificate in certificate chain », **même** si le code demande
+`ssl: { rejectUnauthorized: false }`. Le paramètre est donc retiré de la chaîne transmise
+à `pg`, qui applique alors sa propre règle : TLS, sans vérification stricte du certificat.
+
+### Les trois commandes
+
+```bash
+npm run habilitations:maj          # SQL direct — simulation puis écriture
+npm run habilitations:maj:api      # par l'API — sans chaîne de connexion
+npm run habilitations:preuve       # preuve réversible de l'écriture
+```
+
+Le lot d'habilitations est un JSON local, jamais versionné
+(`.env.habilitations.local`, gabarit dans `.env.habilitations.example`) :
+
+```json
+{
+  "hse":         { "nom": "…", "fonction": "…", "telephone": "…" },
+  "medecin":     { "nom": "…", "fonction": "…", "telephone": "…" },
+  "admin":       { "nom": "…", "fonction": "…", "telephone": "…" },
+  "encadrement": { "nom": "…", "fonction": "…", "telephone": "…" },
+  "superviseur": { "nom": "…", "fonction": "…", "telephone": "…" }
+}
+```
+
+Les trois outils **refusent d'écrire** si l'un des cinq noms manque, et affichent l'état
+avant et après. Ils n'écrivent jamais le rôle, ni le site, ni le second facteur.
+

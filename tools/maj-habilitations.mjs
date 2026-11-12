@@ -23,8 +23,8 @@
 //     "superviseur": { "nom": "…", "fonction": "…", "telephone": "…" }
 //   }
 //
-// La chaîne de connexion vient de SUPABASE_DB_URL, de `.env.sauvegarde.local`,
-// ou du premier argument.
+// La chaîne de connexion est retrouvée toute seule dans les fichiers locaux
+// du dépôt (cf. tools/chain-connexion.mjs) : personne n'a rien à recopier.
 //
 // Règle d'or du projet : on relit avant d'écrire. Le script affiche donc
 // l'état avant et après, et refuse d'écrire si un rôle n'a pas été nommé.
@@ -32,9 +32,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { trouverChaine, normaliserPourPg, masquerUrl } from './chain-connexion.mjs';
 
 const RACINE = fileURLToPath(new URL('..', import.meta.url));
-const FICHIER_ENV = join(RACINE, '.env.sauvegarde.local');
 const FICHIER_LOT_DEFAUT = join(RACINE, '.env.habilitations.local');
 
 /** Le site pilote : Usine de Soumbo (SMB). */
@@ -54,21 +54,6 @@ const CIBLES = [
   { cle: 'superviseur', libelle: 'Superviseur', role: 'supervisor' },
 ];
 
-/** Retire le mot de passe d'une chaine de connexion avant toute affichage. */
-function masquerUrl(url) {
-  return url.replace(/\/\/([^:@/]+):([^@]*)@/, '//$1:***@');
-}
-
-function lireVariables(fichier) {
-  if (!existsSync(fichier)) return {};
-  const variables = {};
-  for (const ligne of readFileSync(fichier, 'utf8').split(/\r?\n/)) {
-    const m = ligne.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m) variables[m[1]] = m[2].trim().replace(/^["'](.*)["']$/, '$1');
-  }
-  return variables;
-}
-
 const args = process.argv.slice(2);
 const simulation = args.includes('--simulation');
 const appliquer = args.includes('--appliquer');
@@ -87,16 +72,18 @@ if (!simulation && !appliquer) {
   process.exit(1);
 }
 
-const variables = { ...lireVariables(FICHIER_ENV) };
 const positionnel = args.filter(
   (a, i) => !a.startsWith('--') && !(indexFichier !== -1 && i === indexFichier + 1),
 );
-const url = process.env.SUPABASE_DB_URL || variables.SUPABASE_DB_URL || positionnel[0] || '';
+const chaine = trouverChaine({ racine: RACINE, positionnel });
 
-if (!url) {
-  console.error('Aucune chaine de connexion. Renseigner SUPABASE_DB_URL.');
+if (!chaine) {
+  console.error('Aucune chaine de connexion trouvée.');
+  console.error('Lancer `npm run habilitations:maj -- --simulation` depuis le dépôt.');
   process.exit(1);
 }
+const source = chaine.source;
+const url = normaliserPourPg(chaine.url);
 
 if (!existsSync(fichierLot)) {
   console.error(`Lot d'habilitations introuvable : ${fichierLot}`);
@@ -134,6 +121,7 @@ const client = new pg.Client({
 
 console.log('=== Mise à jour des habilitations du site pilote ===\n');
 console.log(`  instance   : ${masquerUrl(url)}`);
+console.log(`  source     : ${source}`);
 console.log(`  site       : Usine de Soumbo (SMB) — ${SITE_PILOTE}`);
 console.log(`  mode       : ${simulation ? 'SIMULATION (lecture seule)' : 'ÉCRITURE'}`);
 console.log(`  lot        : ${fichierLot}\n`);

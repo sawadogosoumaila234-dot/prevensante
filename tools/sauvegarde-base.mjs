@@ -33,28 +33,13 @@ import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { trouverChaine, normaliserPourPg, masquerUrl } from './chain-connexion.mjs';
 
 const execFileAsync = promisify(execFile);
 
 const RACINE = fileURLToPath(new URL('..', import.meta.url));
 const FICHIER_ENV = join(RACINE, '.env.sauvegarde.local');
 const DOSSIER_PAR_DEFAUT = join(homedir(), 'prevensante-sauvegardes');
-
-/** Retire le mot de passe d'une chaine de connexion avant toute affichage. */
-function masquerUrl(url) {
-  return url.replace(/\/\/([^:@/]+):([^@]*)@/, '//$1:***@');
-}
-
-/** Lit `VARIABLE=valeur` dans un fichier de type `.env`. */
-function lireFichierEnv(fichier) {
-  if (!existsSync(fichier)) return {};
-  const variables = {};
-  for (const ligne of readFileSync(fichier, 'utf8').split(/\r?\n/)) {
-    const m = ligne.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m) variables[m[1]] = m[2].trim().replace(/^["'](.*)["']$/, '$1');
-  }
-  return variables;
-}
 
 function aide() {
   console.log(`
@@ -96,9 +81,8 @@ const positionnel = args.filter(
     a !== 'supabase',
 );
 
-const variablesFichier = lireFichierEnv(FICHIER_ENV);
-const fournie = positionnel.find((a) => a.startsWith('postgres'));
-const url = process.env.SUPABASE_DB_URL || variablesFichier.SUPABASE_DB_URL || fournie || '';
+const chaine = trouverChaine({ racine: RACINE, positionnel });
+const url = chaine ? normaliserPourPg(chaine.url) : '';
 
 if (!url) {
   const fournieMaisInvalide = positionnel.length > 0;
@@ -112,6 +96,7 @@ if (!url) {
   console.error('  - dans l’environnement, ou');
   console.error(`  - dans ${FICHIER_ENV} (jamais versionné), ou`);
   console.error('  - en premier argument de la commande.');
+  console.error('  - ou dans supabase/.env.local (jamais versionné).');
   console.error('');
   console.error('Format : postgresql://postgres.<ref>:<mot de passe>@aws-0-<region>.pooler.supabase.com:5432/postgres');
   process.exit(1);
@@ -131,12 +116,12 @@ if (dansDepot) {
   process.exit(1);
 }
 
-const binaire = join(
-  RACINE,
-  'node_modules',
-  '.bin',
-  process.platform === 'win32' ? 'supabase.cmd' : 'supabase',
-);
+// La CLI est lancee par le script lui-meme, avec l'interpreteur Node du
+// depot : sous Windows, un executable `.cmd` refuse d'etre lance par
+// `execFile` sans interpréteur de commandes (« spawn EINVAL »). Passer par le
+// script JS evite ce detour, et evite aussi de passer la chaine de connexion
+// (qui contient un mot de passe) par une ligne de commande Shell.
+const binaire = join(RACINE, 'node_modules', 'supabase', 'dist', 'supabase.js');
 if (!existsSync(binaire)) {
   console.error('CLI Supabase introuvable. Lancer `npm ci` a la racine du depot.');
   process.exit(1);
@@ -154,12 +139,11 @@ console.log(`  contenu    : ${suffixe}`);
 console.log(`  destination: ${fichier}`);
 
 const argumentsDump = ['db', 'dump', '--db-url', url, '--file', fichier];
-if (schemaOnly) argumentsDump.push('--schema-only');
 if (dataOnly) argumentsDump.push('--data-only');
 
 console.log('\n  Export en cours…\n');
 try {
-  const { stdout, stderr } = await execFileAsync(binaire, argumentsDump, {
+  const { stdout, stderr } = await execFileAsync(process.execPath, [binaire, ...argumentsDump], {
     cwd: RACINE,
     maxBuffer: 32 * 1024 * 1024,
     windowsHide: true,
@@ -167,6 +151,16 @@ try {
   if (stdout?.trim()) console.log(stdout.trim());
   if (stderr?.trim()) console.error(stderr.trim());
 } catch (e) {
+  const sortie = `${e?.stdout ?? ''}\n${e?.stderr ?? ''}`;
+  if (/docker: command not found|podman also not found/i.test(sortie)) {
+    console.error('\n  L’export local exige Docker (ou Podman) : la CLI Supabase lance');
+    console.error('  `pg_dump` dans un conteneur. Aucun conteneur n’est installé sur ce poste.');
+    console.error('');
+    console.error('  Ce n’est pas bloquant : l’export hebdomadaire est fait par le workflow');
+    console.error('  « Sauvegarde hebdomadaire », sur un runner où Docker est présent.');
+    console.error('  Pour un export immédiat, l’export peut aussi être demandé sur GitHub.');
+    console.error('');
+  }
   console.error('\n  ECHEC de l’export.');
   console.error(`  ${e?.message ?? 'erreur inconnue'}`);
   if (e?.stdout) console.error(String(e.stdout).trim());
@@ -177,6 +171,61 @@ try {
 if (!existsSync(fichier)) {
   console.error(`\n  ECHEC : le fichier ${fichier} n'a pas été produit.`);
   process.exit(1);
+}
+
+/**
+ * Export « structure seule ».
+ *
+ * La CLI Supabase de cette version ne sait pas produire une export de la seule
+ * structure (`--schema-only` n'existe pas). On obtient donc l'export complet,
+ * puis on en retire les donnees : les blocs `COPY ... FROM stdin;` et les
+ * instructions `INSERT` sont ecartes, tout le reste — creation des tables,
+ * index, politiques, fonctions, triggers — est conserve.
+ *
+ * Le resultat est verifie avant d'etre ecrit : il doit contenir la structure,
+ * et ne doit plus contenir de donnees.
+ */
+function retirerLesDonnees(dump) {
+  const lignes = dump.split('\n');
+  const gardees = [];
+  let dansCopy = false;
+  let dansInsert = false;
+
+  for (const ligne of lignes) {
+    if (dansCopy) {
+      if (ligne.trim() === '\\.') dansCopy = false;
+      continue;
+    }
+    if (dansInsert) {
+      if (ligne.trimEnd().endsWith(';')) dansInsert = false;
+      continue;
+    }
+    if (/^COPY\s/i.test(ligne) && /FROM stdin;/.test(ligne)) {
+      dansCopy = true;
+      continue;
+    }
+    if (/^INSERT INTO\s/i.test(ligne)) {
+      dansInsert = !ligne.trimEnd().endsWith(';');
+      continue;
+    }
+    gardees.push(ligne);
+  }
+  return gardees.join('\n');
+}
+
+if (schemaOnly) {
+  const dump = readFileSync(fichier, 'utf8');
+  const structure = retirerLesDonnees(dump);
+  if (!/CREATE TABLE/i.test(structure)) {
+    console.error("\n  ECHEC : l'export de structure est vide — le dump n'a pas etre lu correctement.");
+    process.exit(1);
+  }
+  if (/^COPY\s/i.test(structure) || /^INSERT INTO\s/im.test(structure)) {
+    console.error("\n  ECHEC : des donnees subsistent dans l'export de structure.");
+    process.exit(1);
+  }
+  writeFileSync(fichier, structure, 'utf8');
+  console.log('\n  Export de structure : donnees retirees, structure conservee.');
 }
 
 const contenu = readFileSync(fichier);
