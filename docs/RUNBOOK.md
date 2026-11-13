@@ -221,6 +221,38 @@ fichier hors périmètre.
 
 **Escalade** : immédiatement, hors circuit habituel (§ 5).
 
+### I7 — Le déploiement ne passe plus en production (le site reste en ligne)
+
+**Symptôme** : le push est vert, mais le job « Déploiement en production (Vercel) » échoue, et
+le site en ligne ne reflète pas le dernier push.
+
+**Cause la plus probable** : le secret `VERCEL_TOKEN` du dépôt est invalide ou expiré. **Le
+site n'est pas en panne** dans ce cas — la version précédente reste en service. C'est
+exactement ce qui s'est produit le 13/11/2026 (le job était vert le 12/11, rouge le 13/11,
+sans qu'aucune erreur ne soit visible côté application).
+
+**Action immédiate**
+
+- [ ] Lire le message d'erreur du job : `The token provided via the --token option is not
+      valid` → secret périmé ; `Must not contain: "﻿"` → le secret est pollué par un BOM
+      (caractère invisible) : le retirer avant de le poser.
+- [ ] Renouveler le token : <https://vercel.com/account/settings/tokens> → « Continue with
+      GitHub » → nommer le token `prevensante-ci` → portée *Full Account* → expiration
+      *1 Year* → Vercel demande un code à 6 chiffres par e-mail, il est saisit par le
+      commanditaire. Le token s'affiche **une seule fois**.
+- [ ] Le poser sans BOM :
+      `gh secret set VERCEL_TOKEN --repo sawadogosoumaila234-dot/prevensante --body "<valeur>"`
+- [ ] Relancer le job : `gh run rerun <id> --failed` (onglet Actions → le run → « Re-run
+      failed jobs »).
+- [ ] Si le token est refusé et qu'aucun push n'a encore été publié : redéployer manuellement
+      depuis l'onglet **Deployments** du projet Vercel (… → Redeploy).
+
+**À savoir** : la production est déployée par la **CI**, et non par Vercel — le projet n'est
+volontairement pas relié à un dépôt Git chez Vercel (décision du 13/11/2026). Il n'y a donc
+pas de double déploiement, et aucun droit n'est donné à Vercel sur le compte GitHub.
+
+**Échéance connue** : le token en cours expire le **13/11/2027**.
+
 ---
 
 ## 3. Procédure de restauration
