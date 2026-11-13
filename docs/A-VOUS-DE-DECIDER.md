@@ -14,7 +14,7 @@
 | Les tests | 34 tests du routeur, 27 contrôles SQL, recette navigateur bureau + mobile, 0 vulnérabilité |
 | Le second facteur | Il est **enrôlé et prouvé** (`aal2`) sur les 5 rôles qui le portent : HSE, médecin du travail, administrateur, directeur de site, superviseur |
 | Ce que je peux faire | Tout ce qui est technique — c'est fait |
-| Ce qu'il vous reste | **Plus rien.** Les 6 décisions sont prises, les 5 noms sont écrits en base (12/11), les 3 paramètres d'exploitation sont validés (11/11), et la chaîne de connexion n'est **plus à transmettre** (elle est retrouvée automatiquement, et une voie sans chaîne est éprouvée) |
+| Ce qu'il vous reste | **2 gestes, sur opensource.bf** : créer votre fiche auteur, puis y déposer le projet avec les 3 liens. Tout le reste est fait — démo sans compte, dépôt public sous licence MIT, README, CI, sauvegardes prouvées. |
 
 **En clair : il n'y a plus de travail d'ingénierie, et il ne vous reste rien à faire.**
 Le PV est signé depuis le 05/11/2026, sans réserve.
