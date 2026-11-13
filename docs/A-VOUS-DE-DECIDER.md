@@ -14,9 +14,9 @@
 | Les tests | 34 tests du routeur, 27 contrôles SQL, recette navigateur bureau + mobile, 0 vulnérabilité |
 | Le second facteur | Il est **enrôlé et prouvé** (`aal2`) sur les 5 rôles qui le portent : HSE, médecin du travail, administrateur, directeur de site, superviseur |
 | Ce que je peux faire | Tout ce qui est technique — c'est fait |
-| Ce qu'il vous reste | **1 geste** : les 5 noms. Les 3 paramètres d'exploitation sont validés, et la chaîne de connexion n'est **plus à transmettre** (elle est retrouvée automatiquement, et une voie sans chaîne est éprouvée) |
+| Ce qu'il vous reste | **Plus rien.** Les 6 décisions sont prises, les 5 noms sont écrits en base (12/11), les 3 paramètres d'exploitation sont validés (11/11), et la chaîne de connexion n'est **plus à transmettre** (elle est retrouvée automatiquement, et une voie sans chaîne est éprouvée) |
 
-**En clair : il n'y a plus de travail d'ingénierie.** Ce qui reste, ce sont des noms à écrire.
+**En clair : il n'y a plus de travail d'ingénierie, et il ne vous reste rien à faire.**
 Le PV est signé depuis le 05/11/2026, sans réserve.
 
 > **Ce qui a été rattrapé le 11/11/2026.** Le projet Vercel n'était relié à aucun dépôt GitHub :
@@ -303,11 +303,11 @@ Le détail est dans `docs/ETAT-2026-11-12.md` et `docs/ETAT-2026-11-13.md`.
 
 ## Qui fait quoi maintenant
 
-**Le projet est clos. Il vous reste une chose, et elle ne demande pas de code.**
+**Le projet est clos. Il ne vous reste rien à décider.**
 
 | # | Quoi | Qui | Comment |
 |---|---|---|---|
-| 1 | **Les 3 paramètres d'exploitation** | Vous | Un mot : « OK pour les valeurs proposées ». |
+| — | **Rien.** | — | Les 3 paramètres d'exploitation sont **validés depuis le 11/11/2026** ; les cinq noms sont **écrits en base depuis le 12/11/2026**. |
 
 > ~~Les cinq noms~~ — **fait**. Herve Kone (HSE), Mariam Ouedraogo (médecin du travail),
 > Amina Zongo (administratrice), Salif Zida (directeur de site), Adama Ouattara
