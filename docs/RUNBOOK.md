@@ -239,10 +239,24 @@ fichier hors périmètre.
    cas de doute).
 3. Restaurer l'export :
 
+   > L'artefact de l'onglet **Actions** est un export **SQL texte** (`.sql`, structure et
+   > données réunies), pas un format binaire `.dump` : il se rejoue avec `psql`, pas avec
+   > `pg_restore`.
+
 ```bash
-pg_restore --clean --if-exists --no-owner \
-  --dbname="$SUPABASE_DB_URL_RESTORE" "prevensante-<date>.dump"
+psql "$SUPABASE_DB_URL_RESTORE" -v ON_ERROR_STOP=1 -f "prevensante-<date>-complet.sql"
 ```
+
+   > Avant de restaurer en production, l'export **a déjà été rejoué** par la CI hebdomadaire,
+   > qui échoue si l'export n'est pas restaurable. On peut le revérifier à tout moment, sans
+   > toucher à la production :
+   >
+   > ```bash
+   > npm run base:restaurer -- --fichier "prevensante-<date>-complet.sql"
+   > ```
+   >
+   > Le test ouvre une base neuve, y rejoue l'export et compare chaque table à l'instance
+   > réelle. Verdict attendu : `dump restaurable`.
 
 4. Contrôler l'intégrité :
    - [ ] 20 tables métier présentes en schéma `public`.
@@ -309,7 +323,8 @@ ouvré.
 | Contrôle des escalades ouvertes | Quotidienne | HSE du site | 10 min |
 | Revue du journal d'audit | Hebdomadaire | Administrateur | 30 min |
 | Export hebdomadaire hors site | Hebdomadaire | Responsable d'exploitation | 30 min |
-| Test de restauration | Trimestrielle | Responsable d'exploitation | 2 h |
+| Test de restauration | Hebdomadaire (**automatisé** dans la CI) | CI | 5 min |
+| Test de restauration manuelle, sur un projet isolé | Trimestrielle | Responsable d'exploitation | 2 h |
 | Revue des actions correctives en retard | Mensuelle | HSE + direction de site | 1 h |
 | Revue des documents dont la revision approche (`review_due_at` < 30 j) | Mensuelle | Référent documentaire | 1 h |
 | Rotation des secrets (SMTP, SMS, IA, clés de service) | Semestrielle | Responsable d'exploitation | 1 h |
