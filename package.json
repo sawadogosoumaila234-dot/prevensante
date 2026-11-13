@@ -23,6 +23,7 @@
     "base:publier": "node tools/publier-base.mjs",
     "base:verifier": "node tools/verifier-base.mjs",
     "base:sauvegarder": "node tools/sauvegarde-base.mjs",
+    "base:restaurer": "node tools/restaurer-sauvegarde.mjs",
     "mfa:enroller": "node tools/enroller-mfa.mjs",
     "habilitations:maj": "node tools/maj-habilitations.mjs",
     "habilitations:maj:api": "node tools/maj-habilitations-api.mjs",

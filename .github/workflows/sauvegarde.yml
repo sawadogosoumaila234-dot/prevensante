@@ -25,7 +25,7 @@ jobs:
   sauvegarde:
     name: Export hebdomadaire de la base
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
@@ -45,6 +45,25 @@ jobs:
 
       - name: Exporter la base
         run: node tools/sauvegarde-base.mjs
+
+      # Une sauvegarde dont on n'a pas prouve qu'elle se rejoue n'est pas une
+      # sauvegarde : c'est un fichier qu'on devinera utile le jour ou l'on en
+      # aura besoin. Ce test rejoue le dump produit dans une base neuve et
+      # compare le nombre de lignes a celui de l'instance reelle.
+      #
+      # Il est place AVANT la publication de l'artefact : si le dump n'est pas
+      # restaurable, le job echoue (donc c'est visible), mais l'artefact est
+      # quand meme publie (`if: always()`) — un dump douteux se conserve pour
+      # etre analyse, on ne le jette pas.
+      - name: Prouver que l'export se rejoue
+        run: |
+          dump=$(ls -1 ~/prevensante-sauvegardes/*-complet.sql | head -n 1)
+          if [ -z "$dump" ]; then
+            echo "Aucun export complet n'a ete produit : il n'y a rien a restaurer." >&2
+            exit 1
+          fi
+          echo "export teste : $dump"
+          node tools/restaurer-sauvegarde.mjs --fichier "$dump"
 
       - name: Publier le dump
         if: always()

@@ -284,6 +284,22 @@ Un audit de l'état réel, puis quatre corrections. Le détail est dans
 
 ---
 
+## Ce qui a été fait les 12 et 13/11/2026
+
+Le détail est dans `docs/ETAT-2026-11-12.md` et `docs/ETAT-2026-11-13.md`.
+
+- **Les cinq noms s'écrivent sans transmettre la chaîne de connexion** : elle est déjà sur
+  la machine, dans un fichier local jamais versionné, et les outils la retrouvent seuls.
+  Deux voies ont été éprouvées (SQL direct, API de l'application) — le résultat visible
+  est identique.
+- **L'export hebdomadaire hors site est réparé** : il ne partait qu'un fichier vide, sans
+  les lignes de la base. Il produit maintenant structure **et** données, et il tourne
+  vraiment (le secret `SUPABASE_DB_URL` est posé dans le dépôt, chiffré).
+- **La restaurabilité de la sauvegarde est prouvée** : le dump produit est rejoué dans une
+  base neuve et comparé table par table à l'instance réelle — 23 tables peuplées,
+  toutes identiques. Le test est **automatisé dans la CI hebdomadaire**, avant la
+  publication de l'artefact.
+
 ## Qui fait quoi maintenant
 
 **Le projet est clos. Il vous reste deux choses, et aucune ne demande de code.**
@@ -291,10 +307,21 @@ Un audit de l'état réel, puis quatre corrections. Le détail est dans
 | # | Quoi | Qui | Comment |
 |---|---|---|---|
 | 1 | **Les cinq noms** | Vous | Écrivez-les comme vous voulez, ci-dessus ou en message. Je les écris en base avec l'outil. |
-| 2 | **La chaîne de connexion de l'instance** | Vous | Une ligne, copiée depuis le tableau de bord Supabase. Elle débloque à la fois l'écriture des noms et l'export hebdomadaire. |
-| 3 | **Les 3 paramètres d'exploitation** | Vous | Un mot : « OK pour les valeurs proposées ». |
+| 2 | **Les 3 paramètres d'exploitation** | Vous | Un mot : « OK pour les valeurs proposées ». |
+
+> La troisième ligne du tableau précédent — la chaîne de connexion de l'instance — **n'est
+> plus à faire** : elle est posée dans les secrets du dépôt (chiffrée), l'export
+> hebdomadaire tourne, et l'écriture des noms passe par l'API de l'application sans
+> aucun secret de base.
 
 ### Où trouver la chaîne de connexion, en 4 clics
+
+> **Information conservée pour la mémoire — ce n'est plus une étape du projet.**
+> La chaîne est posée dans les secrets du dépôt GitHub (`SUPABASE_DB_URL`) et dans un
+> fichier local jamais versionné (`supabase/.env.local`). Les outils la retrouvent
+> automatiquement, dans cet ordre : l'environnement, `.env.sauvegarde.local`,
+> `supabase/.env.local`, puis la ligne de commande. Si elle devait être remplacée un jour,
+> la voici :
 
 1. Ouvrez <https://supabase.com/dashboard>, puis votre projet **prevensante**.
 2. Menu de gauche → **Project Settings** → onglet **Database**.

@@ -272,7 +272,9 @@ if (!schemaOnly && !dataOnly) {
     console.error('  ou la base est a reconstruire : elle est refusee, pas publiee.');
     process.exit(1);
   }
-  const tables = new Set([...dump.matchAll(/^COPY\s+([\w".]+)\./gim)].map((m) => m[1]));
+  const tables = new Set(
+    [...dump.matchAll(/INSERT\s+INTO\s+"?([\w]+)"?\."?([\w]+)"?/gi)].map((m) => `${m[1]}.${m[2]}`),
+  );
   console.log('');
   console.log(`  Export complet : structure et donnees reunies (${tables.size} table(s) peuplees).`);
 }

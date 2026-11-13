@@ -286,3 +286,48 @@ Le lot d'habilitations est un JSON local, jamais versionné
 Les trois outils **refusent d'écrire** si l'un des cinq noms manque, et affichent l'état
 avant et après. Ils n'écrivent jamais le rôle, ni le site, ni le second facteur.
 
+## 4. Sauvegarder la base, et prouver que la sauvegarde se rejoue
+
+| Outil | Ce qu'il fait | Dépendance |
+|---|---|---|
+| `sauvegarde-base.mjs` | Exporte la base (structure **et** données) dans `%USERPROFILE%\prevensante-sauvegardes`. Refuse de produire un export sans lignes. | `pg` + chaîne de connexion |
+| `restaurer-sauvegarde.mjs` | **Prouve** qu'un export se rejoue : l'ouvre dans une base neuve, y rejoue les données, compare le nombre de lignes à celui de l'instance réelle. | `pg` + chaîne de connexion |
+
+### Les deux commandes
+
+```bash
+npm run base:sauvegarder                                    # export
+npm run base:restaurer -- --fichier <chemin/vers/le.sql>   # test de restauration
+```
+
+Options de l'export : `--schema-only` (structure seule), `--data-only` (données seules),
+`--dossier <chemin>` (destination). Un export complet produit un `.sql` et un
+`.manifest.json` (empreinte SHA-256, nombre de tables peuplées).
+
+### Ce que le test de restauration mesure
+
+1. Une base neuve est ouverte en local (PGlite) et le schéma versionné y est appliqué —
+   **sans le jeu de démonstration**, qui ferait double emploi avec les données du dump.
+2. Les instructions d'insertion du dump sont rejouées dedans.
+3. Le nombre de lignes de chaque table est comparé à celui de l'instance réelle.
+
+**Verdict** : `dump restaurable` si aucune instruction n'a échoué et qu'au moins une table
+est peuplée ; sinon `NON restaurable` (code de sortie 1).
+
+### Ce qui n'est pas un échec
+
+Les tables de session de GoTrue (`auth.sessions`, `auth.refresh_tokens`,
+`auth.mfa_amr_claims`, `auth.mfa_factors`, `auth.mfa_challenges`, `auth.flow_state`,
+`auth.one_time_tokens`) sont régénérées par Supabase lui-même et ne sont pas émulées
+localement. Elles sont classées « hors émulation », pas « échec ».
+
+Un écart entre le dump et l'instance réelle n'est pas non plus un échec : l'instance peut
+avoir bougé depuis l'export. Seuls les échecs de rejeu sont bloquants.
+
+### Où cela tourne
+
+Le workflow `.github/workflows/sauvegarde.yml` (dimanche 03:17 UTC, ou à la main) exporte
+puis **rejoue l'export avant de le publier**. Si l'export n'est pas restaurable, le job
+échoue — donc c'est visible dans l'onglet Actions — mais l'artefact est quand même publié :
+un dump douteux se conserve pour être analysé, on ne le jette pas.
+
