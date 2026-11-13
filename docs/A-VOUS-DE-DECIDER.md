@@ -291,7 +291,8 @@ Le détail est dans `docs/ETAT-2026-11-12.md` et `docs/ETAT-2026-11-13.md`.
 - **Les cinq noms s'écrivent sans transmettre la chaîne de connexion** : elle est déjà sur
   la machine, dans un fichier local jamais versionné, et les outils la retrouvent seuls.
   Deux voies ont été éprouvées (SQL direct, API de l'application) — le résultat visible
-  est identique.
+  est identique. **Les cinq noms sont écrits en base depuis le 12/11/2026** (Herve Kone,
+  Mariam Ouedraogo, Amina Zongo, Salif Zida, Adama Ouattara) et revérifiés le 13/11.
 - **L'export hebdomadaire hors site est réparé** : il ne partait qu'un fichier vide, sans
   les lignes de la base. Il produit maintenant structure **et** données, et il tourne
   vraiment (le secret `SUPABASE_DB_URL` est posé dans le dépôt, chiffré).
@@ -302,17 +303,21 @@ Le détail est dans `docs/ETAT-2026-11-12.md` et `docs/ETAT-2026-11-13.md`.
 
 ## Qui fait quoi maintenant
 
-**Le projet est clos. Il vous reste deux choses, et aucune ne demande de code.**
+**Le projet est clos. Il vous reste une chose, et elle ne demande pas de code.**
 
 | # | Quoi | Qui | Comment |
 |---|---|---|---|
-| 1 | **Les cinq noms** | Vous | Écrivez-les comme vous voulez, ci-dessus ou en message. Je les écris en base avec l'outil. |
-| 2 | **Les 3 paramètres d'exploitation** | Vous | Un mot : « OK pour les valeurs proposées ». |
+| 1 | **Les 3 paramètres d'exploitation** | Vous | Un mot : « OK pour les valeurs proposées ». |
 
-> La troisième ligne du tableau précédent — la chaîne de connexion de l'instance — **n'est
-> plus à faire** : elle est posée dans les secrets du dépôt (chiffrée), l'export
-> hebdomadaire tourne, et l'écriture des noms passe par l'API de l'application sans
-> aucun secret de base.
+> ~~Les cinq noms~~ — **fait**. Herve Kone (HSE), Mariam Ouedraogo (médecin du travail),
+> Amina Zongo (administratrice), Salif Zida (directeur de site), Adama Ouattara
+> (superviseur) : ils sont écrits en base depuis le 12/11/2026, et revérifiés le 13/11.
+> Contrôle : `node tools/maj-habilitations.mjs --simulation` → les cinq rôles sont
+> identiques entre la base et le fichier local. Rien à faire de plus.
+>
+> La chaîne de connexion de l'instance — **fait également** : elle est posée dans les
+> secrets du dépôt (chiffrée), l'export hebdomadaire tourne, et l'écriture des noms
+> passe par l'API de l'application sans aucun secret de base.
 
 ### Où trouver la chaîne de connexion, en 4 clics
 
