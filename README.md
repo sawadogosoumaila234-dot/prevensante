@@ -6,6 +6,31 @@ cimenteries, usines de production, BTP, métallurgie, agroalimentaire, entrepôt
 Signalement des dangers, suivi des accidents et des actions correctives, assistance IA limitée.
 Première version minimale fonctionnelle (MVP) sur **site pilote** avant extension multisectorielle.
 
+## Démo en ligne
+
+| | Lien |
+|---|---|
+| **Démo publique — sans compte, données fictives** | **https://prevensante-demo.vercel.app** |
+| Instance de recette (base réelle, compte requis) | https://prevensante.vercel.app |
+
+Sur la démo publique, la page de connexion propose huit profils : cliquez sur **« HSE officer »**
+et vous êtes dans l'application, sans installation et sans identifiant. Le code du second
+facteur de démonstration est `123456`.
+
+![Tableau de bord du responsable HSE](docs/ui_dashboard.png)
+
+*Capture en mode démonstration — données fictives, aucun nom réel.*
+
+## Auteur et licence
+
+- **Auteurs** : SAWADOGO Soumaila et Emmanuel Sawadogo — projet réalisé dans le cadre du camp
+  « Je Code pour la Patrie » (ILTIC, partenaire technologique AB Technologie, Ouagadougou,
+  22-25 octobre 2026).
+- **Licence** : [MIT](LICENSE) — réutilisation, modification et republication autorisées,
+  avec mention des auteurs.
+- **Données** : aucune donnée de santé réelle dans ce dépôt. La démo publique fonctionne sur un
+  jeu de données fictif ; la base de recette ne contient que des données d'essai.
+
 ## Pile technique
 
 | Élément | Choix |
